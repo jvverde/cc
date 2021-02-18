@@ -1,0 +1,29 @@
+{
+  "name": "cc",
+  "version": "1.0.0",
+  "description": "Teste binance api",
+  "main": "binance.js",
+  "scripts": {
+    "test": "jest "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jvverde/cc.git"
+  },
+  "keywords": [
+    "test",
+    "teste",
+    "binance",
+    "api"
+  ],
+  "author": "Isidro Vila Verde",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jvverde/cc/issues"
+  },
+  "homepage": "https://github.com/jvverde/cc#readme",
+  "dependencies": {
+    "dotenv-defaults": "^2.0.1",
+    "node-binance-api": "^0.12.4"
+  }
+}
