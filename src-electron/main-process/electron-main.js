@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeTheme } from 'electron'
+import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron'
 
 try {
   if (process.platform === 'win32' && nativeTheme.shouldUseDarkColors === true) {
@@ -53,5 +53,13 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
+  }
+})
+
+ipcMain.on('debug', (event, arg) => {
+  if (arg === 'on') {
+    mainWindow.webContents.openDevTools()
+  } else {
+    mainWindow.webContents.closeDevTools()
   }
 })
