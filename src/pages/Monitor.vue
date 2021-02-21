@@ -17,15 +17,6 @@ import { mapState, mapActions } from 'vuex'
 import pair from 'src/components/Pair'
 // import { getCredentials } from 'src/helpers/keys'
 
-// const compareBySymbol = (a, b) => {
-//   if (a.symbol < b.symbol) return -1
-//   if (a.symbol > b.symbol) return 1
-//   return 0
-// }
-
-// const compare = compareBySymbol
-// import cryptoicon from 'vue-cryptoicon'
-
 export default {
   name: 'Monitor',
   data () {
