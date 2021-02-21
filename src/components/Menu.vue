@@ -20,6 +20,15 @@
         <q-item-label caption>Monitoring assets</q-item-label>
       </q-item-section>
     </q-item>
+    <q-item :clickable="current !== 'keys'" @click="$router.push({ name: 'keys' })">
+      <q-item-section avatar>
+        <q-icon color="menu" name="backup" />
+      </q-item-section>
+      <q-item-section>
+        <q-item-label>Keys</q-item-label>
+        <q-item-label caption>Manage keys</q-item-label>
+      </q-item-section>
+    </q-item>
     <q-item clickable @click="debug">
       <q-item-section avatar>
         <q-icon color="menu" name="build" />

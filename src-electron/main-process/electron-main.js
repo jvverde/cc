@@ -1,4 +1,5 @@
 import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron'
+import say from './say'
 
 try {
   if (process.platform === 'win32' && nativeTheme.shouldUseDarkColors === true) {
@@ -62,4 +63,30 @@ ipcMain.on('debug', (event, arg) => {
   } else {
     mainWindow.webContents.closeDevTools()
   }
+})
+
+const keytar = require('keytar')
+
+ipcMain.on('findCredentials', async (event) => {
+  say.log('findCredentials')
+  const credentials = await keytar.findCredentials('endpoint')
+  event.returnValue = credentials
+})
+
+ipcMain.on('setPassword', async (event, account, password) => {
+  say.log('setPassword', account)
+  keytar.setPassword('endpoint', account, password)
+  event.returnValue = true
+})
+
+ipcMain.on('getPassword', async (event, account) => {
+  say.log('getPassword', account)
+  const pass = await keytar.getPassword('endpoint', account)
+  event.returnValue = pass
+})
+
+ipcMain.on('deletePassword', async (event, account) => {
+  say.log('deletePassword', account)
+  const result = await keytar.deletePassword('endpoint', account)
+  event.returnValue = result
 })

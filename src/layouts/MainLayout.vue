@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import mainmenu from 'components/mainmenu.vue'
+import mainmenu from 'components/Menu.vue'
 
 export default {
   name: 'MainLayout',

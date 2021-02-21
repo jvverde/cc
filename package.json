@@ -1,8 +1,8 @@
 {
-  "name": "my",
+  "name": "CcMon",
   "version": "0.0.1",
-  "description": "A Quasar Framework app",
-  "productName": "Quasar App",
+  "description": "A crypto currencies monitor",
+  "productName": "ccmon",
   "author": "jvverde at win10 <jvverde@win10>",
   "private": true,
   "scripts": {
@@ -13,6 +13,9 @@
     "@quasar/extras": "^1.0.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
+    "electron-store": "^7.0.2",
+    "keytar": "^7.4.0",
+    "node-binance-api": "^0.12.4",
     "quasar": "^1.0.0"
   },
   "devDependencies": {
