@@ -1,15 +1,22 @@
 import { ipcRenderer } from 'electron'
 
-export const getAccounts = async () => {
-  const credentials = ipcRenderer.sendSync('findCredentials')
-  return credentials.map(c => c.account)
+export const getCredentials = async (service) => {
+  const credentials = ipcRenderer.sendSync('getCredentials', service) || []
+  const result = {}
+  credentials.forEach(e => {
+    result[e.account] = e.password
+  })
+  return result
 }
-export const deleteAccount = async (name) => {
-  return ipcRenderer.sendSync('deletePassword', name)
+export const deleteCredentials = async (service) => {
+  return ipcRenderer.sendSync('deleteCredentials', service)
 }
-export const addAccount = async (name, pass) => {
-  return ipcRenderer.sendSync('setPassword', name, pass)
+export const setKey = async (service, key) => {
+  return ipcRenderer.sendSync('setKey', service, key)
 }
-export const getPassword = async (name) => {
-  return ipcRenderer.sendSync('getPassword', name)
+export const setSecret = async (service, secret) => {
+  return ipcRenderer.sendSync('setSecret', service, secret)
+}
+export const setCredentials = async (service, key, secret) => {
+  return ipcRenderer.sendSync('setCredentials', service, key, secret)
 }

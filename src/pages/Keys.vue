@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { getPassword, setPassword, setSecret } from 'src/helpers/credentials'
+import { setKey, setSecret, getCredentials } from 'src/helpers/keys'
 export default {
   name: 'keys',
   data () {
@@ -18,7 +18,21 @@ export default {
       key: undefined,
       secret: undefined
     }
+  },
+  watch: {
+    key (k) {
+      if (k) setKey('binance', k)
+    },
+    secret (s) {
+      if (s) setSecret('binance', s)
+    }
+  },
+  methods: {
+  },
+  async mounted () {
+    const cred = await getCredentials('binance')
+    this.key = cred.key
+    this.secret = cred.secret
   }
-
 }
 </script>

@@ -67,26 +67,34 @@ ipcMain.on('debug', (event, arg) => {
 
 const keytar = require('keytar')
 
-ipcMain.on('findCredentials', async (event) => {
-  say.log('findCredentials')
-  const credentials = await keytar.findCredentials('endpoint')
+ipcMain.on('getCredentials', async (event, service) => {
+  say.log('getCredentials')
+  const credentials = await keytar.findCredentials(service)
   event.returnValue = credentials
 })
 
-ipcMain.on('setPassword', async (event, account, password) => {
-  say.log('setPassword', account)
-  keytar.setPassword('endpoint', account, password)
+ipcMain.on('setKey', async (event, service, key) => {
+  say.log('setKey', service, key)
+  await keytar.setPassword(service, 'key', key)
   event.returnValue = true
 })
 
-ipcMain.on('getPassword', async (event, account) => {
-  say.log('getPassword', account)
-  const pass = await keytar.getPassword('endpoint', account)
-  event.returnValue = pass
+ipcMain.on('setSecret', async (event, service, secret) => {
+  say.log('setSecret', service, secret)
+  await keytar.setPassword(service, 'secret', secret)
+  event.returnValue = true
 })
 
-ipcMain.on('deletePassword', async (event, account) => {
-  say.log('deletePassword', account)
-  const result = await keytar.deletePassword('endpoint', account)
-  event.returnValue = result
+ipcMain.on('setCredentials', async (event, service, key, secret) => {
+  say.log('setCredentials', service, key, secret)
+  await keytar.setPassword(service, 'key', key)
+  await keytar.setPassword(service, 'secret', secret)
+  event.returnValue = true
+})
+
+ipcMain.on('deleteCredentials', async (event, service) => {
+  say.log('deleteCredentials', account)
+  await keytar.deletePassword(service, 'key')
+  await keytar.deletePassword(service, 'secret')
+  event.returnValue = true
 })
