@@ -2,7 +2,7 @@
   <q-page>
     <q-input v-model="filter" label="Filter" class="q-my-xs q-mx-sm"/>
     <div class="flex flex-center q-gutter-sm">
-      <pair style="min-width: 150px"
+      <pair style="min-width: 200px"
         :info="pair"
         v-for="pair in selected"
         :key="pair.symbol">
