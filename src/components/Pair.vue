@@ -13,7 +13,7 @@
         </q-item-section>
       </q-item>
     </q-list>
-    <barline :points="[[0, 100], [5, 50], [15, 75] ]"/>
+    <barline :points="ticks"/>
   </q-card>
 </template>
 
@@ -28,6 +28,7 @@ export default {
   data () {
     return {
       active: false,
+      ticks: [],
       ticker: undefined
     }
   },
@@ -47,6 +48,8 @@ export default {
       if (val) {
         this.ticker = ticker(this.info.symbol, r => {
           console.log(r)
+          const { price, time } = r
+          this.ticks.push({ price, time })
         })
       } else if (ticker) {
         this.ticker.close()
