@@ -18,6 +18,7 @@ export default class {
     this._onerror = onerror
     this._open()
   }
+
   _open () {
     const ws = new WebSocket(this._url)
     ws.onmessage = this._onmessage
@@ -37,6 +38,7 @@ export default class {
       return (e && e.code === 'ECONNREFUSED') ? this._reconnect(e) : this._onerror(e)
     }
   }
+
   _reconnect (e) {
     console.warn('Retry connect', this._url)
     if (this._retry++ < this._maxAttempts) {
@@ -46,7 +48,8 @@ export default class {
       }, this._timeout)
     } else this._onerror(e)
   }
+
   close () {
-    this.ws.close()
+    if (this.ws) this.ws.close()
   }
 }

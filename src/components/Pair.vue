@@ -13,16 +13,22 @@
         </q-item-section>
       </q-item>
     </q-list>
+    <barline :points="[[0, 100], [5, 50], [15, 75] ]"/>
   </q-card>
 </template>
 
 <script>
+import { ticker } from 'src/helpers/wsbinance'
+import barline from './Line'
+
+const re = /(BTC|USDT|ETH|BNB|USDC|BUSD|TUSD|PAX|RUB|AUD|BIDR|BRL|DAI|NGN|EUR|USD|GBP|TRY)$/
 
 export default {
   name: 'pair',
   data () {
     return {
-      active: false
+      active: false,
+      ticker: undefined
     }
   },
   props: {
@@ -33,8 +39,22 @@ export default {
   },
   computed: {
     symbol () {
-      return this.info.symbol.replace(/BTC$|USDT$|ETH$|BNB$|USDC$|BUSD$|CUSD$/, '').toLowerCase()
+      return this.info.symbol.replace(re, '').toLowerCase()
     }
+  },
+  watch: {
+    active (val) {
+      if (val) {
+        this.ticker = ticker(this.info.symbol, r => {
+          console.log(r)
+        })
+      } else if (ticker) {
+        this.ticker.close()
+      }
+    }
+  },
+  components: {
+    barline
   },
   methods: {
     connect () {

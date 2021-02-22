@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { apiv3 } from 'src/config'
 
+axios.defaults.headers['Access-Control-Allow-Origin'] = '*'
+
 export function loadPairs ({ commit }) {
   return new Promise((resolve, reject) => {
     axios.get(`${apiv3}/ticker/24hr`)
