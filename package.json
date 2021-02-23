@@ -17,6 +17,7 @@
     "electron-store": "^7.0.2",
     "keytar": "^7.4.0",
     "node-binance-api": "^0.12.4",
+    "numeral": "^2.0.6",
     "quasar": "^1.0.0",
     "vue-cryptoicon": "^0.17.1-b"
   },

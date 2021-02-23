@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="relative-position">
     <svg :width="width" :height="height"
-      viewPort="0 0 300 150" version="1.1"
+      viewPort="0 0 100% 100%" version="1.1"
       xmlns="http://www.w3.org/2000/svg">
 
       <line
@@ -9,13 +9,23 @@
         :key="i"
         :x1="coord.x" :y1="coord.y"
         :x2="coord.x" :y2="height"
-        stroke="green"
+        :stroke="coord.color"
         :stroke-width="bw"/>
     </svg>
+    <div class="absolute-top-left q-my-sm q-mx-xs column">
+      <q-badge v-if="length > 0" color="transparent" text-color="blue">Max: {{maxY}}</q-badge>
+      <q-badge color="transparent" text-color="blue">Up: {{cntup}}</q-badge>
+    </div>
+    <div class="absolute-bottom-left q-my-sm q-mx-xs column">
+      <q-badge v-if="length > 0" color="transparent" text-color="yellow">Min: {{minY}}</q-badge>
+      <q-badge color="transparent" text-color="yellow">Down: {{cntdown}}</q-badge>
+    </div>
   </div>
 </template>
 
 <script>
+const cntup = (accumulator, p) => p.color === 'green' ? accumulator + 1 : accumulator
+const cntdown = (accumulator, p) => p.color === 'red' ? accumulator + 1 : accumulator
 export default {
   name: 'barline',
   data () {
@@ -37,6 +47,7 @@ export default {
       const w = this.width / n
       return w < m ? 1 : (w - m)
     },
+    length () { return this.points.length },
     coords () {
       return this.points.map(p => {
         const m = this.margin // margin
@@ -44,8 +55,14 @@ export default {
         const h = this.height - m
         const x = m / 2 + w * (p.time - this.minX) / this.deltaX
         const y = m / 2 + h * (1 - (p.price - this.minY) / this.deltaY)
-        return { x, y }
+        return { x, y, color: p.color }
       })
+    },
+    cntup () {
+      return this.points.reduce(cntup, 0)
+    },
+    cntdown () {
+      return this.points.reduce(cntdown, 0)
     }
   },
   props: {
@@ -55,15 +72,15 @@ export default {
     },
     width: {
       type: Number,
-      default: 300
+      default: 302
     },
     height: {
       type: Number,
-      default: 150
+      default: 152
     },
     margin: {
       type: Number,
-      default: 10
+      default: 1
     }
   },
   watch: {

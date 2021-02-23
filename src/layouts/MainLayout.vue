@@ -19,7 +19,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" bordered content-class="bg-menu">
+    <q-drawer v-model="leftDrawerOpen" bordered content-class="bg-menu" dark>
       <mainmenu/>
     </q-drawer>
 
