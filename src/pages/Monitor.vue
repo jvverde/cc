@@ -1,13 +1,17 @@
 <template>
   <q-page>
     <q-input v-model="filter" label="Filter" class="q-my-xs q-mx-sm"/>
-    <div class="flex flex-center q-gutter-sm">
-      <pair style="min-width: 200px"
+    w:{{width}}, {{pairwidth}}
+    <div class="flex flex-center q-gutter-sm" ref="monitorpage">
+      <pair :style="`min-width: ${pairwidth}px; min-height: ${pairheight}px `"
         :info="pair"
+        :width="pairwidth"
+        :height="pairheight"
         v-for="pair in selected"
         :key="pair.symbol">
       </pair>
     </div>
+    <q-resize-observer @resize="calculateWidth" />
   </q-page>
 </template>
 
@@ -22,23 +26,33 @@ export default {
   data () {
     return {
       binance: null,
-      filter: ''
+      filter: '',
+      width: 0,
+      columns: 3,
+      aspect: 2 / 3
     }
   },
   computed: {
     selected () {
       return this.pairs.filter(a => a.symbol.toLowerCase().includes(this.filter.toLowerCase()))
     },
+    pairwidth () { return 0.95 * this.width / this.columns | 0 },
+    pairheight () { return this.aspect * this.pairwidth },
     ...mapState('binance', ['pairs'])
   },
   components: {
     pair
   },
   methods: {
-    ...mapActions('binance', ['loadPairs'])
+    ...mapActions('binance', ['loadPairs']),
+    calculateWidth () {
+      this.width = this.$refs.monitorpage.clientWidth
+    }
   },
   mounted () {
     this.loadPairs()
+    console.log(this.$refs.monitorpage)
+    this.calculateWidth()
   }
 }
 </script>

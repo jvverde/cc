@@ -9,12 +9,17 @@
           <q-item-label>{{info.symbol}}</q-item-label>
           <q-item-label caption  :style="{color: color}">{{currentvalue}}</q-item-label>
         </q-item-section>
-        <q-item-section side>
+        <q-item-section side no-wrap>
           <q-checkbox v-model="active" dense size="xs" color="green"/>
         </q-item-section>
       </q-item>
     </q-list>
     <barline :points="showpoints" :width="width" :height="height"/>
+    <q-list>
+      <q-item dense>
+        <q-slider v-model="scale" :step="1" :min="1" :max="20" label :label-value="`${scale}px per bar`" color="light-green"/>
+      </q-item>
+    </q-list>
   </q-card>
 </template>
 
@@ -32,20 +37,27 @@ export default {
       active: false,
       ticks: [],
       ticker: undefined,
-      nbars: 300,
       margins: 1,
-      height: 150
+      scale: 1
     }
   },
   props: {
     info: {
       type: Object,
       required: true
+    },
+    width: {
+      type: Number,
+      default: 300
+    },
+    height: {
+      type: Number,
+      default: 150
     }
   },
   computed: {
     symbol () { return this.info.symbol.replace(re, '').toLowerCase() },
-    width () { return 2 * this.margins + this.nbars },
+    nbars () { return (this.width - 2 * this.margins) / this.scale | 0 },
     showpoints () { return this.ticks.slice(-this.nbars) }, // show the last nbars
     currentvalue () {
       const index = this.ticks.length - 1
