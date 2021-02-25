@@ -29,7 +29,7 @@ export default class {
       this._onopen(m)
     }
     ws.onclose = m => {
-      console.info('websock close', m)
+      console.info('Websock close', m)
       this.ws = undefined
       this._onclose(m)
     }
@@ -51,5 +51,9 @@ export default class {
 
   close () {
     if (this.ws) this.ws.close()
+  }
+
+  send (data) {
+    if (this.ws) this.ws.send(data)
   }
 }

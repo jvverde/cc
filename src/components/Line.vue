@@ -27,7 +27,7 @@
         stroke="orange"
         stroke-width="4"/>
     </svg>
-    <div v-if="length > 0" class="absolute-top-left q-my-sm q-mx-xs column semi">
+    <div v-if="length > 0" class="absolute-top-left q-ma-lg column semi">
       <q-badge color="transparent" text-color="yellow">Max: {{maxY}} ({{indexOfMaxY}})</q-badge>
       <q-badge color="transparent" text-color="yellow">Max var: {{deltaYr}} ({{percent}}%)</q-badge>
       <q-badge color="transparent" text-color="yellow">Up: {{cntup}}</q-badge>
@@ -38,8 +38,11 @@
       <q-badge color="transparent" text-color="yellow">Beta: {{beta}}</q-badge>
       <q-badge color="transparent" text-color="yellow">Gama: {{gama}}</q-badge>
     </div>
-    <div class="absolute-bottom-left q-my-sm q-mx-xs column semi">
-      <q-badge v-if="length > 0" color="transparent" text-color="yellow">Min: {{minY}} ({{indexOfMinY}})</q-badge>
+    <div v-if="length > 0" class="absolute-top-right q-my-sm q-mx-xs column semi">
+      <q-badge color="transparent" text-color="yellow">Current gain: {{curper}}%</q-badge>
+    </div>
+    <div v-if="length > 0" class="absolute-bottom-left q-my-sm q-mx-xs column semi">
+      <q-badge color="transparent" text-color="yellow">Min: {{minY}} ({{indexOfMinY}})</q-badge>
       <q-badge color="transparent" text-color="yellow">Down: {{cntdown}}</q-badge>
     </div>
   </div>
@@ -68,18 +71,23 @@ export default {
   computed: {
     Ys () { return this.points.map(e => e.price) },
     Xs () { return this.points.map(e => e.time) },
-    maxY () { return Math.max(...this.Ys) },
-    minY () { return Math.min(...this.Ys) },
-    maxX () { return Math.max(...this.Xs) },
-    minX () { return Math.min(...this.Xs) },
-    deltaY () { return (this.maxY - this.minY) || 1 },
-    deltaX () { return (this.maxX - this.minX) || 1 },
-    percent () { return Math.round(10000 * this.deltaY / (this.maxY || 1)) / 100 },
     indexOfMaxY () { return indexOfMax(this.Ys) },
     indexOfMaxX () { return indexOfMax(this.Xs) },
     indexOfMinY () { return indexOfMin(this.Ys) },
     indexOfMinX () { return indexOfMin(this.Xs) },
     lastindex () { return this.coords.length - 1 },
+    maxY () { return this.points[this.indexOfMaxY].price },
+    minY () { return this.points[this.indexOfMinY].price },
+    maxX () { return Math.max(...this.Xs) },
+    minX () { return Math.min(...this.Xs) },
+    deltaY () { return (this.maxY - this.minY) || 1 },
+    deltaX () { return (this.maxX - this.minX) || 1 },
+    percent () { return Math.round(10000 * this.deltaY / (this.maxY || 1)) / 100 },
+    curper () {
+      const { lastindex, indexOfMinY, points } = this
+      const cur = Math.round(10000 * ((points[lastindex].price - points[indexOfMinY].price) / points[lastindex].price)) / 100
+      return cur
+    },
     A () {
       const { indexOfMinY, indexOfMaxY, coords, getHypto } = this
       return getHypto(indexOfMinY, indexOfMaxY, coords)
@@ -107,6 +115,7 @@ export default {
       const { lastindex, indexOfMinY, coords } = this
       const opposite = coords[lastindex].v - coords[indexOfMinY].v
       const adjacent = coords[lastindex].x - coords[indexOfMinY].x
+      if (adjacent === 0) return 90
       return Math.atan(opposite / adjacent) * 180 / Math.PI
     },
     gama () {

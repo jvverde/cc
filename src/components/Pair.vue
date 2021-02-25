@@ -10,7 +10,7 @@
           <q-item-label caption  :style="{color: color}">{{currentvalue}}</q-item-label>
         </q-item-section>
         <q-item-section side no-wrap>
-          <q-checkbox v-model="active" dense size="xs" color="green"/>
+          <q-btn color="red" icon="close" round dense size="xs" outline @click="$emit('close')"/>
         </q-item-section>
       </q-item>
     </q-list>
@@ -34,7 +34,6 @@ export default {
   name: 'pair',
   data () {
     return {
-      active: false,
       ticks: [],
       ticker: undefined,
       margins: 1,
@@ -70,26 +69,24 @@ export default {
     }
   },
   watch: {
-    active (val) {
-      if (val) {
-        this.ticker = ticker(this.info.symbol, r => {
-          const { price, time } = r
-          const lastindex = this.ticks.length
-          const lastprice = lastindex > 0 ? this.ticks[lastindex - 1].price : price
-          const color = lastprice === price ? 'black' : lastprice < price ? 'green' : 'red'
-          this.ticks.push({ price, time, color })
-        })
-      } else if (ticker) {
-        this.ticker.close()
-      }
-    }
   },
   components: {
     barline
   },
   methods: {
   },
-  async mounted () {
+  mounted () {
+    this.ticker = ticker(this.info.symbol, r => {
+      const { price, time } = r
+      const lastindex = this.ticks.length
+      const lastprice = lastindex > 0 ? this.ticks[lastindex - 1].price : price
+      const color = lastprice === price ? 'black' : lastprice < price ? 'green' : 'red'
+      this.ticks.push({ price, time, color })
+    })
+  },
+  beforeDestroy () {
+    if (!this.ticker) return
+    this.ticker.close()
   }
 }
 </script>

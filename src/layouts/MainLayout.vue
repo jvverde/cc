@@ -12,10 +12,10 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Cryptocoins Monitoring
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn color="orange" icon="stop" round dense size="xs" outline @click="stop()"/>
       </q-toolbar>
     </q-header>
 
@@ -33,6 +33,7 @@
 
 <script>
 import mainmenu from 'components/Menu.vue'
+import { mapMutations } from 'vuex'
 
 export default {
   name: 'MainLayout',
@@ -41,6 +42,18 @@ export default {
     return {
       leftDrawerOpen: false
     }
+  },
+  methods: {
+    ...mapMutations('binance', ['monitorPairs', 'stopMonitoring']),
+    stop () {
+      this.stopMonitoring()
+    }
+  },
+  mounted () {
+    this.monitorPairs(['BNBUSDT', 'ETHUSDT', 'BTCUSDT'])
+  },
+  beforeDestroy () {
+    this.stopMonitoring()
   }
 }
 </script>

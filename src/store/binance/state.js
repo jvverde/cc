@@ -1,5 +1,7 @@
 export default function () {
   return {
-    pairs: []
+    pairs: [],
+    monitPairs: [],
+    websocket: null
   }
 }
