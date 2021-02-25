@@ -49,11 +49,13 @@ export default class {
     } else this._onerror(e)
   }
 
-  close () {
-    if (this.ws) this.ws.close()
+  close (reason) {
+    if (this.ws) this.ws.close(1000, reason)
   }
 
   send (data) {
     if (this.ws) this.ws.send(data)
   }
+
+  ws () { return this.ws }
 }

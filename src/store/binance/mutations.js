@@ -11,9 +11,11 @@ export function addPairs (state, pairs) {
   state.pairs.push(...pairs)
   state.pairs.sort(compare)
 }
+
 export function resetPairs (state) {
   state.pairs.length = 0 // reset array
 }
+
 export function monitorPairs (state, symbol) {
   if (typeof symbol === 'string') symbol = [symbol]
   console.log('symbols', symbol, typeof symbol)
@@ -23,6 +25,7 @@ export function monitorPairs (state, symbol) {
     console.log('Commit pairs', pairs)
   })
 }
+
 export function stopMonitoring (state) {
   if (state.websocket) {
     state.websocket.send(JSON.stringify({

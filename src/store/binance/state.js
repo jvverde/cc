@@ -2,6 +2,6 @@ export default function () {
   return {
     pairs: [],
     monitPairs: [],
-    websocket: null
+    bstream: null
   }
 }

@@ -34,32 +34,35 @@
 <script>
 import mainmenu from 'components/Menu.vue'
 import { mapMutations } from 'vuex'
-import mkstream from 'src/helpers/stream'
+import Stream from 'src/helpers/stream'
 
 export default {
   name: 'MainLayout',
   components: { mainmenu },
   data () {
     return {
-      leftDrawerOpen: false
+      leftDrawerOpen: false,
+      bstream: null
     }
   },
   methods: {
     ...mapMutations('binance', ['monitorPairs', 'stopMonitoring']),
     stop () {
-      this.stopMonitoring()
+      Stream.disconnect()
     }
   },
   async mounted () {
+    const bstream = new Stream()
     // this.monitorPairs(['BNBUSDT', 'ETHUSDT', 'BTCUSDT'])
-    const bstream = await mkstream((data) => {
+    await Stream.connect((data) => {
       console.log('data from stream', data)
     })
+    await bstream.subscribe('bnbusdt@ticker', 'btcusdt@ticker')
     const list = await bstream.list()
     console.log('List:', list)
   },
   beforeDestroy () {
-    this.stopMonitoring()
+    this.stop()
   }
 }
 </script>

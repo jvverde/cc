@@ -7,70 +7,70 @@ const limiter = new Bottleneck({
   minTime: 250
 })
 
-class Stream {
-  constructor (handler, onopen, onerror) {
+export default class Stream {
+  static endpoint = undefined
+  static handler = () => null
+
+  static async connect (handler) {
     this.handler = handler
     const onmessage = m => {
       this.handler(JSON.parse(m.data))
     }
-    this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror })
+    return new Promise((resolve, reject) => {
+      const onopen = () => resolve(stream)
+      const onerror = err => reject(err)
+      this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror })
+    })
+  }
+
+  static disconnect (reason = 'byuser') {
+    this.endpoint.close(reason)
   }
 
   send (data) {
     return limiter.schedule(() => {
       console.log('Send data', data)
-      this.endpoint.send(JSON.stringify(data))
+      Stream.endpoint.send(JSON.stringify(data))
     })
   }
 
-  subscribe (...streams) {
-    const id = new Date().getTime()
-    this.send({
-      method: 'SUBSCRIBE',
-      params: streams,
-      id
-    })
-    return id
-  }
-
-  unsubscribe (...streams) {
-    const id = new Date().getTime()
-    this.send({
-      method: 'UNSUBSCRIBE',
-      params: streams,
-      id
-    })
-    return id
-  }
-
-  list () {
+  _request (request) {
     return new Promise((resolve, reject) => {
       try {
         const id = new Date().getTime()
-        const oldhandler = this.handler
-        this.handler = data => {
+        const oldhandler = Stream.handler
+        Stream.handler = data => {
           if (data && data.id === id) {
-            this.handler = oldhandler
+            Stream.handler = oldhandler
             resolve(data.result)
           } else {
             oldhandler(data)
           }
         }
-        this.send({
-          method: 'LIST_SUBSCRIPTIONS',
-          id
-        })
+        this.send({ ...request, id })
       } catch (err) {
         reject(err)
       }
     })
   }
-}
 
-export default function (handler) {
-  return new Promise((resolve, reject) => {
-    const onopen = () => resolve(stream)
-    const onerror = err => reject(err)
-    const stream = new Stream(handler, onopen, onerror)
-  })
+  subscribe (...names) {
+    return this._request({
+      method: 'SUBSCRIBE',
+      params: names
+    })
+  }
+
+  unsubscribe (...names) {
+    return this._request({
+      method: 'UNSUBSCRIBE',
+      params: names
+    })
+  }
+
+  list () {
+    return this._request({
+      method: 'LIST_SUBSCRIPTIONS'
+    })
+  }
 }
