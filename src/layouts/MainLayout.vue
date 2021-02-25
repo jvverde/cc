@@ -34,6 +34,7 @@
 <script>
 import mainmenu from 'components/Menu.vue'
 import { mapMutations } from 'vuex'
+import mkstream from 'src/helpers/stream'
 
 export default {
   name: 'MainLayout',
@@ -49,8 +50,13 @@ export default {
       this.stopMonitoring()
     }
   },
-  mounted () {
-    this.monitorPairs(['BNBUSDT', 'ETHUSDT', 'BTCUSDT'])
+  async mounted () {
+    // this.monitorPairs(['BNBUSDT', 'ETHUSDT', 'BTCUSDT'])
+    const bstream = await mkstream((data) => {
+      console.log('data from stream', data)
+    })
+    const list = await bstream.list()
+    console.log('List:', list)
   },
   beforeDestroy () {
     this.stopMonitoring()
