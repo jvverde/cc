@@ -41,25 +41,23 @@ export default {
   components: { mainmenu },
   data () {
     return {
-      leftDrawerOpen: false,
-      bstream: null
+      leftDrawerOpen: false
     }
   },
   methods: {
-    ...mapMutations('binance', ['monitorPairs', 'stopMonitoring']),
+    ...mapMutations('binance', ['cache']),
     stop () {
       Stream.disconnect()
     }
   },
   async mounted () {
-    const bstream = new Stream()
-    // this.monitorPairs(['BNBUSDT', 'ETHUSDT', 'BTCUSDT'])
     await Stream.connect((data) => {
-      console.log('data from stream', data)
+      // console.log(data)
+      this.cache(data)
     })
-    await bstream.subscribe('bnbusdt@ticker', 'btcusdt@ticker')
-    const list = await bstream.list()
-    console.log('List:', list)
+    const bstream = new Stream()
+    await bstream.subscribe('bnbusdt@ticker', 'btcusdt@ticker', 'ltcusdt@ticker', 'ethusdt@ticker', 'adausdt@ticker')
+    // const list = await bstream.list()
   },
   beforeDestroy () {
     this.stop()

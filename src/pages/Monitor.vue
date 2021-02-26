@@ -40,6 +40,19 @@
         :key="pair.symbol">
       </pair>
     </div>
+    <div class="flex flex-center q-gutter-sm">
+      <q-table :data="rows" row-key="symbol"/>
+    </div>
+    <!-- div class="flex flex-center q-gutter-sm">
+      <span v-for="(val, key) in max" :key="key">
+        {{key}}:{{format(val)}}
+      </span>
+    </div -->
+    <!-- div class="flex flex-center q-gutter-sm">
+      <span v-for="(val, key) in lastprices" :key="key">
+        {{key}}:{{formatTime(val.time)}} => {{val.price}} ({{val.lastmax}})({{val.lastmin}})
+      </span>
+    </div -->
     <q-resize-observer @resize="calculateWidth" />
   </q-page>
 </template>
@@ -86,7 +99,15 @@ export default {
     },
     pairwidth () { return 0.95 * this.width / this.columns | 0 },
     pairheight () { return this.aspect * this.pairwidth },
-    ...mapState('binance', ['pairs'])
+    ...mapState('binance', ['pairs', 'cache', 'max', 'min', 'lastprices']),
+    rows () {
+      const result = []
+      for (const symbol in this.lastprices) {
+        const { value: price, minutes: hour, chg, max, min, percent } = this.lastprices[symbol]
+        result.push({ symbol, price, hour, chg, max, min, percent })
+      }
+      return result
+    }
   },
   components: {
     pair
@@ -107,6 +128,17 @@ export default {
       const i = this.follow.indexOf(symbol)
       if (i < 0) return
       this.follow.splice(i, 1)
+    },
+    formatTime (t) {
+      return new Date(t).toLocaleTimeString('pt-PT')
+    },
+    format (val) {
+      return val.map(({ price, time }) => {
+        return {
+          price,
+          time: this.formatTime(time)
+        }
+      })
     }
   },
   mounted () {
