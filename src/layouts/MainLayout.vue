@@ -45,19 +45,15 @@ export default {
     }
   },
   methods: {
-    ...mapMutations('binance', ['cache']),
+    ...mapMutations('binance', ['enqueue']),
     stop () {
       Stream.disconnect()
     }
   },
   async mounted () {
     await Stream.connect((data) => {
-      // console.log(data)
-      this.cache(data)
+      this.enqueue(data)
     })
-    const bstream = new Stream()
-    await bstream.subscribe('bnbusdt@ticker', 'btcusdt@ticker', 'ltcusdt@ticker', 'ethusdt@ticker', 'adausdt@ticker')
-    // const list = await bstream.list()
   },
   beforeDestroy () {
     this.stop()

@@ -91,6 +91,54 @@ const findMinAfterTime = (a, time) => {
 //   return new Date(t).toLocaleTimeString('pt-PT')
 // }
 
+export function enqueue (state, { stream, data }) {
+  const price = Number(data.c)
+  const time = data.E
+  const current = { price, time, next: null }
+  const symbol = state.symbols[stream]
+  if (!symbol) {
+    const lastmax = current
+    const lastmin = current
+    const symbol = {
+      current,
+      hist: [current],
+      lastmax,
+      lastmin
+    }
+    Vue.set(state.symbols, stream, symbol)
+  } else {
+    symbol.current = current
+    symbol.hist.push(current)
+    while (time - state.deephist > symbol.hist[0].time) { // remove oldest tickets from history tail
+      const removed = symbol.hist.shift()
+      if (removed.time === symbol.lastmax.time) {
+        symbol.lastmax = symbol.lastmax.next || current // Use current just in case. It should never hapens
+      }
+      if (removed.time === symbol.lastmin.time) {
+        symbol.lastmin = symbol.lastmin.next || current // Use current just in case. It should never hapens
+      }
+    }
+    if (price >= symbol.lastmax.price) {
+      symbol.lastmax = current
+    } else {
+      let point = symbol.lastmax
+      while (point.next && price < point.next.price) {
+        point = point.next
+      }
+      point.next = current
+    }
+    if (price <= symbol.lastmin.price) {
+      symbol.lastmin = current
+    } else {
+      let point = symbol.lastmin
+      while (point.next && price > point.next.price) {
+        point = point.next
+      }
+      point.next = current
+    }
+  }
+}
+
 export function cache (state, { stream, data }) {
   const { c: price, E: time } = data
   if (stream in state.cache) {
@@ -130,7 +178,7 @@ export function cache (state, { stream, data }) {
     const delta = max - min
     const percent = max ? Math.round(10000 * delta / max) / 100 : undefined
     const lastprices = state.lastprices[stream]
-    const chg = Math.round(10000 * (lastprices.price - price) / lastprices.price) / 100
+    const chg = numeral(lastprices.price - price).value()
     state.lastprices[stream] = { price, value, chg, time, minutes, max, min, delta, percent, lastmax, lastmin }
   } else {
     Vue.set(state.cache, stream, [data])
