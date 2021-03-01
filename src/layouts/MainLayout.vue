@@ -33,8 +33,9 @@
 
 <script>
 import mainmenu from 'components/Menu.vue'
-import { mapMutations } from 'vuex'
+import { mapState } from 'vuex'
 import Stream from 'src/helpers/stream'
+import { enqueue } from 'src/data'
 
 export default {
   name: 'MainLayout',
@@ -44,16 +45,29 @@ export default {
       leftDrawerOpen: false
     }
   },
+  computed: {
+    ...mapState('binance', ['watching']),
+    watchSet () { return new Set(this.watching) }
+  },
   methods: {
-    ...mapMutations('binance', ['enqueue']),
     stop () {
       Stream.disconnect()
     }
   },
   async mounted () {
-    await Stream.connect((data) => {
-      this.enqueue(data)
+    await Stream.connect((answer) => {
+      // if (answer.stream && answer.data) {
+      //   this.enqueue(answer)
+      // } else {
+      //   console.warn(answer)
+      // }
+      if (answer.stream === '!miniTicker@arr') {
+        const wanted = answer.data.filter(t => this.watchSet.has(t.s))
+        enqueue(wanted)
+      } else console.warn(answer)
     })
+    const bs = new Stream()
+    bs.subscribe('!miniTicker@arr')
   },
   beforeDestroy () {
     this.stop()

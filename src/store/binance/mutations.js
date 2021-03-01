@@ -91,51 +91,69 @@ const findMinAfterTime = (a, time) => {
 //   return new Date(t).toLocaleTimeString('pt-PT')
 // }
 
+export function watch (state, symbol) {
+  if (state.watching.includes(symbol)) return
+  state.watching.push(symbol)
+}
+
+export function forget (state, symbol) {
+  const index = state.watching.indexOf(symbol)
+  if (index < 0) return
+  state.watching.splice(index, 1)
+}
+
 export function enqueue (state, { stream, data }) {
-  const price = Number(data.c)
-  const time = data.E
-  const current = { price, time, next: null }
-  const symbol = state.symbols[stream]
-  if (!symbol) {
-    const lastmax = current
-    const lastmin = current
-    const symbol = {
-      current,
-      hist: [current],
-      lastmax,
-      lastmin
-    }
-    Vue.set(state.symbols, stream, symbol)
-  } else {
-    symbol.current = current
-    symbol.hist.push(current)
-    while (time - state.deephist > symbol.hist[0].time) { // remove oldest tickets from history tail
-      const removed = symbol.hist.shift()
-      if (removed.time === symbol.lastmax.time) {
-        symbol.lastmax = symbol.lastmax.next || current // Use current just in case. It should never hapens
+  try {
+    const price = Number(data.c)
+    const time = data.E
+    const current = { price, time, next: null }
+    const symbol = state.symbols[stream]
+    if (!symbol) {
+      const lastmax = current
+      const lastmin = current
+      const symbol = {
+        current,
+        hist: [current],
+        lastmax,
+        lastmin,
+        tail: 0
       }
-      if (removed.time === symbol.lastmin.time) {
-        symbol.lastmin = symbol.lastmin.next || current // Use current just in case. It should never hapens
-      }
-    }
-    if (price >= symbol.lastmax.price) {
-      symbol.lastmax = current
+      Vue.set(state.symbols, stream, symbol)
     } else {
-      let point = symbol.lastmax
-      while (point.next && price < point.next.price) {
-        point = point.next
+      symbol.current = current
+      symbol.hist.push(current)
+      while (time - state.deephist > symbol.hist[symbol.tail].time) { // remove oldest tickets from history tail
+        // const removed = symbol.hist.shift()
+        const removed = symbol.hist[symbol.tail]
+        if (removed.time === symbol.lastmax.time) {
+          symbol.lastmax = symbol.lastmax.next || current // Use current just in case. It should never hapens
+        }
+        if (removed.time === symbol.lastmin.time) {
+          symbol.lastmin = symbol.lastmin.next || current // Use current just in case. It should never hapens
+        }
+        symbol.tail++
       }
-      point.next = current
-    }
-    if (price <= symbol.lastmin.price) {
-      symbol.lastmin = current
-    } else {
-      let point = symbol.lastmin
-      while (point.next && price > point.next.price) {
-        point = point.next
+      if (price >= symbol.lastmax.price) {
+        symbol.lastmax = current
+      } else {
+        let point = symbol.lastmax
+        while (point.next && price < point.next.price) {
+          point = point.next
+        }
+        point.next = current
       }
-      point.next = current
+      if (price <= symbol.lastmin.price) {
+        symbol.lastmin = current
+      } else {
+        let point = symbol.lastmin
+        while (point.next && price > point.next.price) {
+          point = point.next
+        }
+        point.next = current
+      }
     }
+  } catch (err) {
+    console.warn('Enqueue', err, stream, data)
   }
 }
 

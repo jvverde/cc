@@ -21,7 +21,8 @@
     "node-binance-api": "^0.12.4",
     "numeral": "^2.0.6",
     "quasar": "^1.0.0",
-    "vue-cryptoicon": "^0.17.1-b"
+    "vue-cryptoicon": "^0.17.1-b",
+    "vuex-persistedstate": "^4.0.0-beta.3"
   },
   "devDependencies": {
     "@quasar/app": "^2.0.0",

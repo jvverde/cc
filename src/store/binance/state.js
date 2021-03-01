@@ -37,6 +37,7 @@ export default function () {
       oneminute
     },
     deephist: fiveminutes, // Store a history of 5 minutes of values
-    symbols: {}
+    symbols: {},
+    watching: []
   }
 }
