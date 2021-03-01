@@ -10,20 +10,43 @@ const limiter = new Bottleneck({
 export default class Stream {
   static endpoint = undefined
   static handler = () => null
+  static status = ''
 
-  static async connect (handler) {
+  static connect (handler, { onreconnect = () => null } = {}) {
     this.handler = handler
+    this.status = 'connecting'
     const onmessage = m => {
       this.handler(JSON.parse(m.data))
     }
+    const onclose = m => {
+      console.log(m)
+      if (this.status === 'closing') return
+      const onopen = () => {
+        console.log('Socket reconnected')
+        this.status = 'connected'
+        onreconnect()
+      }
+      const onerror = err => {
+        this.status = 'error'
+        console.error('Error on reconnect', err)
+      }
+      this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
+    }
     return new Promise((resolve, reject) => {
-      const onopen = () => resolve(stream)
-      const onerror = err => reject(err)
-      this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror })
+      const onopen = () => {
+        this.status = 'connected'
+        resolve(stream)
+      }
+      const onerror = err => {
+        this.status = 'error'
+        reject(err)
+      }
+      this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
     })
   }
 
   static disconnect (reason = 'byuser') {
+    this.status = 'closing'
     this.endpoint.close(reason)
   }
 

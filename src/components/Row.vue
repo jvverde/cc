@@ -1,14 +1,21 @@
 <template>
-  <div class="row justify-center q-mx-lg">
-    <div class="col">{{time}}</div>
-    <div class="col">{{symbol}}</div>
-    <div class="col" :class="alertcolor(price - lastprice)">{{price}}</div>
-    <div class="col text-right" :class="alertcolor(chg24h)">{{numeral(chg24h).format('00.0%')}}</div>
-    <div class="col text-right" :class="alertcolor(min - lastmin)">{{min}}</div>
-    <div class="col text-center">[{{numeral(range).format('0.000%')}}]</div>
-    <div class="col text-left" :class="alertcolor(max - lastmax)">{{max}}</div>
-    <div class="col text-right">{{numeral(volume).format('0,0')}}</div>
-    <div class="col text-right">{{numeral(quote).format('0,0')}}</div>
+  <div class="col line">
+    <div class="row justify-center q-mx-lg">
+      <div class="col">{{time}}</div>
+      <div class="col">{{symbol}}</div>
+      <div class="col" :class="alertcolor(price - lastprice)">{{price}}</div>
+      <div class="col text-right" :class="alertcolor(chg24h)">{{numeral(chg24h).format('0.0%')}}</div>
+      <div class="col text-right" :class="alertcolor(chg1m.val)">{{numeral(chg1m.val).format('0.0%')}}@{{chg1m.time}}s</div>
+      <div class="col text-right" :class="alertcolor(chg5m.val)">{{numeral(chg5m.val).format('0.0%')}}@{{chg5m.time}}s</div>
+      <div class="col text-right" :class="alertcolor(chg15m.val)">{{numeral(chg15m.val).format('0.0%')}}@{{chg15m.time}}s</div>
+      <div class="col text-right" :class="alertcolor(chg30m.val)">{{numeral(chg30m.val).format('0.0%')}}@{{chg30m.time}}s</div>
+      <div class="col text-right" :class="alertcolor(chg1h.val)">{{numeral(chg1h.val).format('0.0%')}}@{{chg1h.time}}s</div>
+      <div class="col text-right" :class="alertcolor(min - lastmin)">{{min}}</div>
+      <div class="col text-center">[{{numeral(range).format('0.000%')}}]</div>
+      <div class="col text-left" :class="alertcolor(max - lastmax)">{{max}}</div>
+      <div class="col text-right">{{numeral(volume).format('0,0')}}</div>
+      <div class="col text-right">{{numeral(quote).format('0,0')}}</div>
+    </div>
   </div>
 </template>
 
@@ -27,7 +34,13 @@ export default {
       min: Infinity,
       lastmin: Infinity,
       time: '',
+      chg: 0,
       chg24h: 0,
+      chg1m: 0,
+      chg5m: 0,
+      chg15m: 0,
+      chg30m: 0,
+      chg1h: 0,
       volume: 0,
       quote: 0
     }
@@ -54,6 +67,11 @@ export default {
       this.lastprice = this.price
       this.price = Number(t.price)
       this.time = new Date(t.time).toLocaleTimeString()
+      this.chg1m = t.chg1m
+      this.chg5m = t.chg5m
+      this.chg15m = t.chg15m
+      this.chg30m = t.chg30m
+      this.chg1h = t.chg1h
       this.chg24h = (t.c - t.o) / t.o
       this.volume = t.v
       this.quote = t.q

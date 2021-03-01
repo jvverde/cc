@@ -55,6 +55,7 @@ export default {
     }
   },
   async mounted () {
+    const bs = new Stream()
     await Stream.connect((answer) => {
       // if (answer.stream && answer.data) {
       //   this.enqueue(answer)
@@ -65,8 +66,11 @@ export default {
         const wanted = answer.data.filter(t => this.watchSet.has(t.s))
         enqueue(wanted)
       } else console.warn(answer)
+    }, {
+      onreconnect: () => {
+        bs.subscribe('!miniTicker@arr')
+      }
     })
-    const bs = new Stream()
     bs.subscribe('!miniTicker@arr')
   },
   beforeDestroy () {

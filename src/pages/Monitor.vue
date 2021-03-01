@@ -31,7 +31,15 @@
           />
         </q-item-section>
       </q-item>
-      <q-item dense v-for="(symbol, index) in follow" :key="index">
+      <q-item>
+        <q-item-section>
+          <rowheader/>
+        </q-item-section>
+        <q-item-section side>
+          <q-btn icon="none" disable flat dense size="xs" round/>
+        </q-item-section>
+      </q-item>
+      <q-item dense v-for="(symbol, index) in order" :key="index">
         <q-item-section>
           <row :symbol="symbol"/>
         </q-item-section>
@@ -48,6 +56,7 @@
 
 import { mapState, mapActions, mapMutations } from 'vuex'
 import row from 'src/components/Row'
+import rowheader from 'src/components/RowHeader'
 
 export default {
   name: 'Monitor',
@@ -61,6 +70,7 @@ export default {
     }
   },
   computed: {
+    order () { return [...this.follow].sort() },
     RE () {
       const s = this.restrict2coins.join('|.+')
       return new RegExp(`(.+${s})$`)
@@ -72,7 +82,8 @@ export default {
     ...mapState('binance', ['pairs', 'watching'])
   },
   components: {
-    row
+    row,
+    rowheader
   },
   watch: {
   },
