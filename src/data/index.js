@@ -127,9 +127,13 @@ class TickersQueue extends Queue {
     const last = buff[lastIndex]
     const first = buff[firstIndex]
     if (first === undefined || last === undefined) return NaN
+    const val = (last.c - first.c) / first.c
+    const time = (last.E - first.E) / 1000
+    const byhour = val * 3600 / time
     return {
-      val: (last.c - first.c) / first.c,
-      time: Math.round(100 * (last.E - first.E) / 1000 / 100)
+      val,
+      time: Math.round(100 * time) / 100,
+      byhour
     }
   }
 

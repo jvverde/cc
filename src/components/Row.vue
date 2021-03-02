@@ -5,11 +5,36 @@
       <div class="col">{{symbol}}</div>
       <div class="col" :class="alertcolor(price - lastprice)">{{price}}</div>
       <div class="col text-right" :class="alertcolor(chg24h)">{{numeral(chg24h).format('0.0%')}}</div>
-      <div class="col text-right" :class="alertcolor(chg1m.val)">{{numeral(chg1m.val).format('0.0%')}}@{{chg1m.time}}s</div>
-      <div class="col text-right" :class="alertcolor(chg5m.val)">{{numeral(chg5m.val).format('0.0%')}}@{{chg5m.time}}s</div>
-      <div class="col text-right" :class="alertcolor(chg15m.val)">{{numeral(chg15m.val).format('0.0%')}}@{{chg15m.time}}s</div>
-      <div class="col text-right" :class="alertcolor(chg30m.val)">{{numeral(chg30m.val).format('0.0%')}}@{{chg30m.time}}s</div>
-      <div class="col text-right" :class="alertcolor(chg1h.val)">{{numeral(chg1h.val).format('0.0%')}}@{{chg1h.time}}s</div>
+      <div class="col text-right">
+        <span :class="alertcolor(chg1m.val)">{{numeral(chg1m.val).format('0.0%')}}</span>@<span>{{chg1m.time}}s</span>
+        <span class="caption" :class="alert4color(chg1m.byhour, chg1h.val * 3600 / chg1h.time)">
+          {{numeral(chg1m.byhour).format('0.0%')}}/h
+        </span>
+      </div>
+      <div class="col text-right">
+        <span :class="alertcolor(chg5m.val)">{{numeral(chg5m.val).format('0.0%')}}</span>@<span>{{chg5m.time}}s</span>
+        <span class="caption" :class="alert4color(chg5m.byhour, chg1h.val * 3600 / chg1h.time)">
+          {{numeral(chg5m.byhour).format('0.0%')}}/h
+        </span>
+      </div>
+      <div class="col text-right">
+        <span :class="alertcolor(chg15m.val)">{{numeral(chg15m.val).format('0.0%')}}</span>@<span>{{chg15m.time}}s</span>
+        <span class="caption" :class="alert4color(chg15m.byhour, chg1h.val * 3600 / chg1h.time)">
+          {{numeral(chg15m.byhour).format('0.0%')}}/h
+        </span>
+      </div>
+      <div class="col text-right">
+        <span :class="alertcolor(chg30m.val)">{{numeral(chg30m.val).format('0.0%')}}</span>@<span>{{chg30m.time}}s</span>
+        <span class="caption" :class="alert4color(chg30m.byhour, chg1h.val * 3600 / chg1h.time)">
+          {{numeral(chg30m.byhour).format('0.0%')}}/h
+        </span>
+      </div>
+      <div class="col text-right">
+        <span :class="alertcolor(chg1h.val)">{{numeral(chg1h.val).format('0.0%')}}</span>@<span>{{chg1h.time}}s</span>
+        <span class="caption" :class="alert4color(chg1m.byhour, chg1h.val * 3600 / chg1h.time)">
+          {{numeral(chg1h.byhour).format('0.0%')}}/h
+        </span>
+      </div>
       <div class="col text-right" :class="alertcolor(min - lastmin)">{{min}}</div>
       <div class="col text-center">[{{numeral(range).format('0.000%')}}]</div>
       <div class="col text-left" :class="alertcolor(max - lastmax)">{{max}}</div>
@@ -88,6 +113,14 @@ export default {
         red: v < 0,
         green: v > 0
       }
+    },
+    alert4color (v, r) {
+      return {
+        purple: v < 0 && v < r,
+        red: v < 0 && v >= r,
+        green: v > 0 && v <= r,
+        turquoise: v > 0 && v > r
+      }
     }
   },
   mounted () {
@@ -105,5 +138,18 @@ export default {
   }
   .green {
     color: green;
+  }
+  .purple {
+    color: purple;
+  }
+  .turquoise {
+    color: turquoise;
+  }
+  .caption {
+    display: block;
+    margin: 0;
+    margin-top:-5px;
+    padding: 0;
+    font-size: 75%;
   }
 </style>
