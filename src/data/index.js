@@ -3,6 +3,14 @@ const store = {
   size: 3600
 }
 
+export const intervales = [
+  60,
+  300,
+  900,
+  1800,
+  3600
+]
+
 class Pair {
   constructor () {
     this.hist = new TickersQueue(store.size)
@@ -65,18 +73,17 @@ export function enqueue (tickers) {
     let { min, max, hist } = pair
 
     hist.push(ticker)
-    const chg1m = hist.chg(60)
-    const chg5m = hist.chg(300)
-    const chg15m = hist.chg(900)
-    const chg30m = hist.chg(1800)
-    const chg1h = hist.chg(3600)
+    const changes = []
+    for (const i of intervales) {
+      changes.push(hist.chg(i))
+    }
 
     const { c: price, E: time } = ticker
 
     pair.min = min = updateMin({ price, time, min })
     pair.max = max = updateMax({ price, time, max })
 
-    if (pair.callback) pair.callback({ ...ticker, time, price, chg1m, chg5m, chg15m, chg30m, chg1h, min, max })
+    if (pair.callback) pair.callback({ ...ticker, time, price, changes, min, max })
   }
 }
 
@@ -119,11 +126,11 @@ class TickersQueue extends Queue {
     this.min = { price: Infinity, time: Infinity }
   }
 
-  chg (nseconds) {
+  chg (nticks) {
     const { size, head, buff } = this
-    if (nseconds >= size) return undefined
+    if (nticks >= size) return undefined
     const lastIndex = (head - 1 + size) % size
-    const firstIndex = (head - 1 - nseconds + size) % size
+    const firstIndex = (head - 1 - nticks + size) % size
     const last = buff[lastIndex]
     const first = buff[firstIndex]
     if (first === undefined || last === undefined) return NaN
@@ -132,7 +139,7 @@ class TickersQueue extends Queue {
     const byhour = val * 3600 / time
     return {
       val,
-      time: Math.round(100 * time) / 100,
+      time,
       byhour
     }
   }

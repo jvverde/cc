@@ -3,37 +3,18 @@
     <div class="row justify-center q-mx-lg">
       <div class="col">{{time}}</div>
       <div class="col">{{symbol}}</div>
-      <div class="col" :class="alertcolor(price - lastprice)">{{price}}</div>
-      <div class="col text-right" :class="alertcolor(chg24h)">{{numeral(chg24h).format('0.0%')}}</div>
-      <div class="col text-right">
-        <span :class="alertcolor(chg1m.val)">{{numeral(chg1m.val).format('0.0%')}}</span>@<span>{{chg1m.time}}s</span>
-        <span class="caption" :class="alert4color(chg1m.byhour, chg1h.val * 3600 / chg1h.time)">
+      <div class="col text-right" :class="alertcolor(price - lastprice)">{{price}}</div>
+      <div class="col text-left q-px-xs" :class="alertcolor(chg24h)">{{numeral(chg24h).format('00.0%')}}</div>
+      <div
+        v-for="(c, i) in changes" :key="i"
+        style="white-space:nowrap"
+        class="col q-px-xs changes" :class="alertcolor(c.val)">
+          {{numeral(c.val).format('0.0%')}}
+          in
+          {{convert(c.time)}}
+        <!--span class="caption" :class="alert4color(chg1m.byhour, chg1h.val * 3600 / chg1h.time)">
           {{numeral(chg1m.byhour).format('0.0%')}}/h
-        </span>
-      </div>
-      <div class="col text-right">
-        <span :class="alertcolor(chg5m.val)">{{numeral(chg5m.val).format('0.0%')}}</span>@<span>{{chg5m.time}}s</span>
-        <span class="caption" :class="alert4color(chg5m.byhour, chg1h.val * 3600 / chg1h.time)">
-          {{numeral(chg5m.byhour).format('0.0%')}}/h
-        </span>
-      </div>
-      <div class="col text-right">
-        <span :class="alertcolor(chg15m.val)">{{numeral(chg15m.val).format('0.0%')}}</span>@<span>{{chg15m.time}}s</span>
-        <span class="caption" :class="alert4color(chg15m.byhour, chg1h.val * 3600 / chg1h.time)">
-          {{numeral(chg15m.byhour).format('0.0%')}}/h
-        </span>
-      </div>
-      <div class="col text-right">
-        <span :class="alertcolor(chg30m.val)">{{numeral(chg30m.val).format('0.0%')}}</span>@<span>{{chg30m.time}}s</span>
-        <span class="caption" :class="alert4color(chg30m.byhour, chg1h.val * 3600 / chg1h.time)">
-          {{numeral(chg30m.byhour).format('0.0%')}}/h
-        </span>
-      </div>
-      <div class="col text-right">
-        <span :class="alertcolor(chg1h.val)">{{numeral(chg1h.val).format('0.0%')}}</span>@<span>{{chg1h.time}}s</span>
-        <span class="caption" :class="alert4color(chg1m.byhour, chg1h.val * 3600 / chg1h.time)">
-          {{numeral(chg1h.byhour).format('0.0%')}}/h
-        </span>
+        </span-->
       </div>
       <div class="col text-right" :class="alertcolor(min - lastmin)">{{min}}</div>
       <div class="col text-center">[{{numeral(range).format('0.000%')}}]</div>
@@ -45,7 +26,7 @@
 </template>
 
 <script>
-import { listen } from 'src/data'
+import { listen, intervales } from 'src/data'
 import numeral from 'numeral'
 
 export default {
@@ -60,12 +41,7 @@ export default {
       lastmin: Infinity,
       time: '',
       chg: 0,
-      chg24h: 0,
-      chg1m: 0,
-      chg5m: 0,
-      chg15m: 0,
-      chg30m: 0,
-      chg1h: 0,
+      changes: new Array(intervales.length),
       volume: 0,
       quote: 0
     }
@@ -92,11 +68,7 @@ export default {
       this.lastprice = this.price
       this.price = Number(t.price)
       this.time = new Date(t.time).toLocaleTimeString()
-      this.chg1m = t.chg1m
-      this.chg5m = t.chg5m
-      this.chg15m = t.chg15m
-      this.chg30m = t.chg30m
-      this.chg1h = t.chg1h
+      this.changes = t.changes
       this.chg24h = (t.c - t.o) / t.o
       this.volume = t.v
       this.quote = t.q
@@ -108,7 +80,24 @@ export default {
     numeral (v) {
       return numeral(v)
     },
+    convert (time) {
+      const h = 0 | time / 3600
+      time %= 3600
+      const m = 0 | time / 60
+      time %= 60
+      const s = 0 | time
+      if (h) return `${h}h${m}m${s}s`
+      if (m) return `${m}m${s}s`
+      return `${s}s`
+    },
     alertcolor (v) {
+      return {
+        red: v < 0,
+        green: v > 0
+      }
+    },
+    alertcolor2 (v) {
+      console.log(v)
       return {
         red: v < 0,
         green: v > 0

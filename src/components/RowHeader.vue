@@ -3,13 +3,9 @@
     <div class="row justify-center q-mx-lg header">
       <div class="col">Time</div>
       <div class="col">Symbol</div>
-      <div class="col">Price</div>
-      <div class="col text-right">Chg (24h)</div>
-      <div class="col text-right">Chg (1m)</div>
-      <div class="col text-right">Chg (5m)</div>
-      <div class="col text-right">Chg (15m)</div>
-      <div class="col text-right">Chg (30m)</div>
-      <div class="col text-right">Chg (1h)</div>
+      <div class="col text-right">Price</div>
+      <div class="col text-left q-px-xs">Chg (24h)</div>
+      <div class="col text-left" v-for="(v,i) in intervales" :key="i">Chg ({{v}}t)</div>
       <div class="col text-right">Min</div>
       <div class="col text-center">Range</div>
       <div class="col text-left">Max</div>
@@ -20,8 +16,14 @@
 </template>
 
 <script>
+import { intervales } from 'src/data'
 
 export default {
+  data () {
+    return {
+      intervales
+    }
+  }
 }
 </script>
 
