@@ -1,6 +1,16 @@
+const localStorageName = 'ccmonStorage'
+
 const store = {
-  pairs: {},
+  coins: {},
   size: 3600
+}
+
+if (localStorage) {
+  const { coins, size } = localStorage.getItem(localStorageName) || {}
+  if (coins instanceof Object) {
+    store.coins = coins
+    store.size = size
+  }
 }
 
 export const intervales = [
@@ -11,12 +21,25 @@ export const intervales = [
   3600
 ]
 
-class Pair {
+export const slideWindow = [
+  6e3, // 1 min
+  3e5, // 5 min
+  9e5, // 15min
+  1.8e6, // 30min
+  3.6e6 // 1hour
+]
+
+class Coin {
   constructor () {
     this.hist = new TickersQueue(store.size)
     this.max = { price: -Infinity, time: Infinity }
     this.min = { price: Infinity, time: Infinity }
-    this.chg = Infinity
+    this.M = {}
+    this.m = {}
+    for (const s of slideWindow) {
+      this.M[s] = { price: -Infinity, time: Infinity }
+      this.m[s] = { price: Infinity, time: Infinity }
+    }
   }
 }
 
@@ -45,7 +68,7 @@ function updateMax ({ price, time, max }, delta = 6e4) {
 
 function updateMin ({ price, time, min }, delta = 6e4) {
   const current = { price, time }
-  while (time - min.time > delta && min.next) {
+  while (time - min.time > delta && min.next) { // Slide min to first minimum on window delta time
     min = min.next
   }
 
@@ -66,11 +89,11 @@ export function enqueue (tickers) {
     ticker.c = Number(ticker.c)
     // console.log(ticker.s, Number(ticker.c), new Date(ticker.E).toLocaleTimeString())
     const symbol = ticker.s
-    if (!store.pairs[symbol]) {
-      store.pairs[symbol] = new Pair()
+    if (!store.coins[symbol]) {
+      store.coins[symbol] = new Coin()
     }
-    const pair = store.pairs[symbol]
-    let { min, max, hist } = pair
+    const coin = store.coins[symbol]
+    let { min, max, hist } = coin
 
     hist.push(ticker)
     const changes = []
@@ -80,18 +103,18 @@ export function enqueue (tickers) {
 
     const { c: price, E: time } = ticker
 
-    pair.min = min = updateMin({ price, time, min })
-    pair.max = max = updateMax({ price, time, max })
+    coin.min = min = updateMin({ price, time, min })
+    coin.max = max = updateMax({ price, time, max })
 
-    if (pair.callback) pair.callback({ ...ticker, time, price, changes, min, max })
+    if (coin.callback) coin.callback({ ...ticker, time, price, changes, min, max })
   }
 }
 
 export function listen (symbol, cb) {
-  if (!store.pairs[symbol]) {
-    store.pairs[symbol] = new Pair()
+  if (!store.coins[symbol]) {
+    store.coins[symbol] = new Coin()
   }
-  store.pairs[symbol].callback = cb
+  store.coins[symbol].callback = cb
 }
 
 class Queue {
@@ -133,7 +156,7 @@ class TickersQueue extends Queue {
     const firstIndex = (head - 1 - nticks + size) % size
     const last = buff[lastIndex]
     const first = buff[firstIndex]
-    if (first === undefined || last === undefined) return NaN
+    if (first === undefined || last === undefined) return {}
     const val = (last.c - first.c) / first.c
     const time = (last.E - first.E) / 1000
     const byhour = val * 3600 / time
@@ -151,4 +174,10 @@ class TickersQueue extends Queue {
     this.min = updateMin({ price, time, min }, 300 * 1000)
     this.max = updateMax({ price, time, max }, 300 * 1000)
   }
+}
+
+if (localStorage && window && window.addEventListener) {
+  window.addEventListener('beforeunload', () => {
+    localStorage.setItem(localStorageName, JSON.stringify(store))
+  })
 }

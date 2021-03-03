@@ -1,14 +1,15 @@
 <template>
   <div class="col line">
     <div class="row justify-center q-mx-lg">
-      <div class="col">{{time}}</div>
+      <div class="col-auto q-pr-sm">{{time}}</div>
       <div class="col">{{symbol}}</div>
-      <div class="col text-right" :class="alertcolor(price - lastprice)">{{price}}</div>
-      <div class="col text-left q-px-xs" :class="alertcolor(chg24h)">{{numeral(chg24h).format('00.0%')}}</div>
+      <div class="col text-left" :class="alertcolor(price - lastprice)">{{price}}</div>
+      <div class="col-auto q-px-sm" :class="alertcolor(chg24h)">{{numeral(chg24h).format('00.0%')}}</div>
       <div
         v-for="(c, i) in changes" :key="i"
-        style="white-space:nowrap"
-        class="col q-px-xs changes" :class="alertcolor(c.val)">
+        class="col q-px-xs"
+        :class="alertcolor(c.val)"
+        style="white-space:nowrap">
           {{numeral(c.val).format('0.0%')}}
           in
           {{convert(c.time)}}
@@ -40,8 +41,8 @@ export default {
       min: Infinity,
       lastmin: Infinity,
       time: '',
-      chg: 0,
-      changes: new Array(intervales.length),
+      chg24h: 0,
+      changes: intervales.map(() => ({})),
       volume: 0,
       quote: 0
     }
@@ -63,6 +64,9 @@ export default {
     }
   },
   methods: {
+    log (v) {
+      console.log(v)
+    },
     ticker (t) {
       // console.log('ticker@row:', t)
       this.lastprice = this.price
