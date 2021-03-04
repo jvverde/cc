@@ -15,7 +15,6 @@
           Cryptocoins Monitoring
         </q-toolbar-title>
 
-        <q-btn color="orange" icon="save" round dense size="xs" outline @click="save()"/>
         <q-btn color="orange" icon="stop" round dense size="xs" outline @click="stop()"/>
       </q-toolbar>
     </q-header>
@@ -36,7 +35,7 @@
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
 import Stream from 'src/helpers/stream'
-import { enqueue, save } from 'src/data'
+// import { enqueue } from 'src/data'
 
 export default {
   name: 'MainLayout',
@@ -53,33 +52,15 @@ export default {
   methods: {
     stop () {
       Stream.disconnect()
-    },
-    save () {
-      save()
     }
   },
   async mounted () {
-    const bs = new Stream()
-    await Stream.connect((answer) => {
-      // if (answer.stream && answer.data) {
-      //   this.enqueue(answer)
-      // } else {
-      //   console.warn(answer)
-      // }
-      if (answer.stream === '!miniTicker@arr') {
-        const wanted = answer.data.filter(t => this.watchSet.has(t.s))
-        enqueue(wanted)
-      } else {
-        const date = new Date(answer.data.E)
-        console.info(answer, date.toLocaleTimeString(), date.getMilliseconds())
-      }
-    }, {
-      onreconnect: () => {
-        // bs.subscribe('!miniTicker@arr')
-      }
-    })
-    bs.subscribe('!miniTicker@arr')
-    // bs.subscribe('bnbusdt@kline_1m' /*, 'bnbusdt@trade', */, 'bnbusdt@aggTrade')
+    await Stream.connect()
+    console.log('connected at mainlauyoout')
+    // Stream.listen((data) => {
+    //   const wanted = data.filter(t => this.watchSet.has(t.s))
+    //   enqueue(wanted)
+    // }, '!miniTicker@arr')
   },
   beforeDestroy () {
     this.stop()

@@ -21,19 +21,23 @@ export default class {
 
   _open () {
     const ws = new WebSocket(this._url)
+    this.status = 'opening'
     ws.onmessage = this._onmessage
     ws.onopen = m => {
-      console.info('websock open', m)
+      this.status = 'open'
+      console.info('Websock open', m)
       this.ws = ws
       this._retry = 0
       this._onopen(m)
     }
     ws.onclose = m => {
+      this.status = 'close'
       console.info('Websock close', m)
       this.ws = undefined
       this._onclose(m)
     }
     ws.onerror = e => {
+      this.status = 'error'
       console.warn('websock error', e)
       return (e && e.code === 'ECONNREFUSED') ? this._reconnect(e) : this._onerror(e)
     }

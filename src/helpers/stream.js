@@ -11,11 +11,19 @@ export default class Stream {
   static endpoint = undefined
   static status = ''
   static handlersbystream = {}
+  static pResolve
+  static pReject
+  static connected = new Promise((resolve, reject) => {
+    Stream.pResolve = resolve
+    Stream.pReject = reject
+  })
+
   static install (stream, handler) {
-    const { handlersbystream } = this
+    const handlersbystream = this.handlersbystream
     const id = new Date().getTime() + '_' + Math.random()
     if (!handlersbystream[stream]) {
       handlersbystream[stream] = [{ id, handler }]
+      console.log('Installed first handler for stream', stream)
     } else handlersbystream[stream].push({ id, handler })
     return id
   }
@@ -35,7 +43,7 @@ export default class Stream {
   static dispatcher = (answer) => {
     if (answer && answer.stream && answer.stream in this.handlersbystream) {
       this.handlersbystream[answer.stream].forEach(e => {
-        e.handler(stream.data)
+        e.handler(answer.data)
       })
     } else {
       console.warn('Unexpected data', answer)
@@ -45,6 +53,7 @@ export default class Stream {
   static onreconnect () {
     console.log('Socket reconnected')
     this.status = 'connected'
+    this.pResolve(true)
     const streams = Object.keys(this.handlersbystream)
     this.subscribe(...streams)
   }
@@ -57,22 +66,29 @@ export default class Stream {
     const onerror = err => {
       this.status = 'error'
       console.error('Error on reconnect', err)
+      Stream.pReject(false)
     }
     const onclose = m => {
+      this.connected = new Promise((resolve, reject) => {
+        Stream.pResolve = resolve
+        Stream.pReject = reject
+      })
       console.log(m)
       if (this.status === 'closing') {
         this.status = 'closed'
       } else { // reconnect
-        this.endpoint = new WS(`${stream}`, { onmessage, onopen: onreconnect, onerror, onclose })
+        this.endpoint = new WS(`${stream}`, { onmessage, onopen: this.onreconnect, onerror, onclose })
       }
     }
     return new Promise((resolve, reject) => {
       const onopen = () => {
         this.status = 'connected'
-        resolve(stream)
+        Stream.pResolve(true)
+        resolve(this.endpoint)
       }
       const onerror = err => {
         this.status = 'error'
+        Stream.pReject(false)
         reject(err)
       }
       this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
@@ -84,7 +100,8 @@ export default class Stream {
     this.endpoint.close(reason)
   }
 
-  static send (data) {
+  static async send (data) {
+    await this.connected
     return limiter.schedule(() => {
       console.log('Send data', data)
       this.endpoint.send(JSON.stringify(data))
@@ -95,10 +112,10 @@ export default class Stream {
     return new Promise((resolve, reject) => {
       try {
         const id = new Date().getTime()
-        const oldhandler = Stream.handler
-        Stream.handler = data => {
+        const oldhandler = Stream.dispatcher
+        Stream.dispatcher = data => {
           if (data && data.id === id) {
-            Stream.handler = oldhandler
+            Stream.dispatcher = oldhandler
             resolve(data.result)
           } else {
             oldhandler(data)
@@ -136,7 +153,7 @@ export default class Stream {
   }
 
   static async listen (handler, ...streams) {
-    const ids = streams.map(s => this.install(handler, s))
+    const ids = streams.map(s => this.install(s, handler))
     await this.subscribe(...streams)
     return ids
   }
