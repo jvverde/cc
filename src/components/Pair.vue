@@ -85,8 +85,6 @@ export default {
     })
   },
   beforeDestroy () {
-    if (!this.ticker) return
-    this.ticker.close()
   }
 }
 </script>

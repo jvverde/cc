@@ -16,6 +16,7 @@
     "core-js": "^3.6.5",
     "electron-log": "^4.3.2",
     "electron-store": "^7.0.2",
+    "jsonlize": "^0.4.2",
     "keytar": "^7.4.0",
     "moment": "^2.29.1",
     "node-binance-api": "^0.12.4",

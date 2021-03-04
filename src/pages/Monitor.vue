@@ -39,7 +39,7 @@
           <q-btn icon="none" disable flat dense size="xs" round/>
         </q-item-section>
       </q-item>
-      <q-item dense v-for="(symbol, index) in order" :key="index">
+      <q-item dense v-for="(symbol, index) in order" :key="index" clickable>
         <q-item-section>
           <row :symbol="symbol"/>
         </q-item-section>

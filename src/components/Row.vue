@@ -4,7 +4,7 @@
       <div class="col-auto q-pr-sm">{{time}}</div>
       <div class="col">{{symbol}}</div>
       <div class="col text-left" :class="alertcolor(price - lastprice)">{{price}}</div>
-      <div class="col-auto q-px-sm" :class="alertcolor(chg24h)">{{numeral(chg24h).format('00.0%')}}</div>
+      <div class="col-auto q-px-sm" :class="alertcolor(chg24h)">{{numeral(chg24h).format('0.0%')}}</div>
       <div
         v-for="(c, i) in changes" :key="i"
         class="col q-px-xs"
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { listen, intervales } from 'src/data'
+import { listen, unlisten, intervales } from 'src/data'
 import numeral from 'numeral'
 
 export default {
@@ -121,6 +121,7 @@ export default {
     listen(this.symbol, this.ticker)
   },
   beforeDestroy () {
+    unlisten(this.symbol)
   }
 }
 </script>

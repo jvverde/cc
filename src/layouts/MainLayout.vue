@@ -15,6 +15,7 @@
           Cryptocoins Monitoring
         </q-toolbar-title>
 
+        <q-btn color="orange" icon="save" round dense size="xs" outline @click="save()"/>
         <q-btn color="orange" icon="stop" round dense size="xs" outline @click="stop()"/>
       </q-toolbar>
     </q-header>
@@ -35,7 +36,7 @@
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
 import Stream from 'src/helpers/stream'
-import { enqueue } from 'src/data'
+import { enqueue, save } from 'src/data'
 
 export default {
   name: 'MainLayout',
@@ -52,6 +53,9 @@ export default {
   methods: {
     stop () {
       Stream.disconnect()
+    },
+    save () {
+      save()
     }
   },
   async mounted () {
@@ -65,13 +69,17 @@ export default {
       if (answer.stream === '!miniTicker@arr') {
         const wanted = answer.data.filter(t => this.watchSet.has(t.s))
         enqueue(wanted)
-      } else console.warn(answer)
+      } else {
+        const date = new Date(answer.data.E)
+        console.info(answer, date.toLocaleTimeString(), date.getMilliseconds())
+      }
     }, {
       onreconnect: () => {
-        bs.subscribe('!miniTicker@arr')
+        // bs.subscribe('!miniTicker@arr')
       }
     })
     bs.subscribe('!miniTicker@arr')
+    // bs.subscribe('bnbusdt@kline_1m' /*, 'bnbusdt@trade', */, 'bnbusdt@aggTrade')
   },
   beforeDestroy () {
     this.stop()

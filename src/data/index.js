@@ -1,16 +1,8 @@
-const localStorageName = 'ccmonStorage'
+const localStorageName = 'ccmonStorage.json'
 
 const store = {
   coins: {},
   size: 3600
-}
-
-if (localStorage) {
-  const { coins, size } = localStorage.getItem(localStorageName) || {}
-  if (coins instanceof Object) {
-    store.coins = coins
-    store.size = size
-  }
 }
 
 export const intervales = [
@@ -117,6 +109,12 @@ export function listen (symbol, cb) {
   store.coins[symbol].callback = cb
 }
 
+export function unlisten (symbol, cb) {
+  if (store.coins[symbol] && store.coins[symbol].callback) {
+    store.coins[symbol].callback = () => undefined
+  }
+}
+
 class Queue {
   constructor (size = 300) {
     this.head = 0
@@ -176,8 +174,27 @@ class TickersQueue extends Queue {
   }
 }
 
+if (localStorage) {
+  try {
+    const { coins, size } = JSON.parse(localStorage.getItem(localStorageName)) || {}
+    if (coins instanceof Object) {
+      store.size = size
+      for (const symbol in coins) {
+        const tickers = ((coins[symbol].hist || {}).buff || []).filter(t => t instanceof Object && t.s === symbol)
+        enqueue(tickers)
+      }
+      // store.coins = coins
+    }
+  } catch (err) {
+    console.warn(err)
+  }
+}
+
 if (localStorage && window && window.addEventListener) {
   window.addEventListener('beforeunload', () => {
+    for (const s in store.coins) {
+      store.coins[s].callback = undefined
+    }
     localStorage.setItem(localStorageName, JSON.stringify(store))
   })
 }
