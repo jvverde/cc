@@ -34,7 +34,7 @@
 <script>
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
-import Stream from 'src/helpers/stream'
+import { connect, disconnect } from 'src/helpers/stream'
 // import { enqueue } from 'src/data'
 
 export default {
@@ -51,11 +51,11 @@ export default {
   },
   methods: {
     stop () {
-      Stream.disconnect()
+      disconnect()
     }
   },
   async mounted () {
-    await Stream.connect()
+    await connect()
     console.log('connected at mainlauyoout')
     // Stream.listen((data) => {
     //   const wanted = data.filter(t => this.watchSet.has(t.s))

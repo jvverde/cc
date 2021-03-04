@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import Stream from 'src/helpers/stream'
+import { listen, dismiss } from 'src/helpers/stream'
 
 export default {
   name: 'coin',
@@ -26,9 +26,9 @@ export default {
     stream: {
       immediate: true,
       handler (val, old) {
-        if (old) Stream.dismiss(old)
+        if (old) dismiss(old)
         console.log(this.stream)
-        Stream.listen(this.candles, this.stream)
+        listen(this.candles, this.stream)
       }
     }
   },

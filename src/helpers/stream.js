@@ -7,159 +7,159 @@ const limiter = new Bottleneck({
   minTime: 250
 })
 
-export default class Stream {
-  static endpoint = undefined
-  static status = ''
-  static handlersbystream = {}
-  static pResolve
-  static pReject
-  static connected = new Promise((resolve, reject) => {
-    Stream.pResolve = resolve
-    Stream.pReject = reject
-  })
+// export default class Stream {
+let endpoint
+let status = ''
+let pResolve
+let pReject
+let connected = new Promise((resolve, reject) => {
+  pResolve = resolve
+  pReject = reject
+})
 
-  static install (stream, handler) {
-    const handlersbystream = this.handlersbystream
-    const id = new Date().getTime() + '_' + Math.random()
-    if (!handlersbystream[stream]) {
-      handlersbystream[stream] = [{ id, handler }]
-      console.log('Installed first handler for stream', stream)
-    } else handlersbystream[stream].push({ id, handler })
-    return id
-  }
+const handlersbystream = {}
 
-  static uninstall (id) {
-    for (const [stream, handlers] of Object.entries(this.handlersbystream)) {
-      const index = handlers.findIndex(e => e.id === id)
-      if (index >= 0) {
-        if (handlers.length === 1) delete this.handlersbystream[stream]
-        else handlers.splice(index, 1)
-        return stream
-      }
-    }
-    return false
-  }
+function install (stream, handler) {
+  const id = new Date().getTime() + '_' + Math.random()
+  if (!handlersbystream[stream]) {
+    handlersbystream[stream] = [{ id, handler }]
+    console.log('Installed first handler for stream', stream)
+  } else handlersbystream[stream].push({ id, handler })
+  return id
+}
 
-  static dispatcher = (answer) => {
-    if (answer && answer.stream && answer.stream in this.handlersbystream) {
-      this.handlersbystream[answer.stream].forEach(e => {
-        e.handler(answer.data)
-      })
-    } else {
-      console.warn('Unexpected data', answer)
+function uninstall (id) {
+  for (const [stream, handlers] of Object.entries(handlersbystream)) {
+    const index = handlers.findIndex(e => e.id === id)
+    if (index >= 0) {
+      if (handlers.length === 1) delete handlersbystream[stream]
+      else handlers.splice(index, 1)
+      return stream
     }
   }
+  return false
+}
 
-  static onreconnect () {
-    console.log('Socket reconnected')
-    this.status = 'connected'
-    this.pResolve(true)
-    const streams = Object.keys(this.handlersbystream)
-    this.subscribe(...streams)
-  }
-
-  static connect () {
-    this.status = 'connecting'
-    const onmessage = m => {
-      this.dispatcher(JSON.parse(m.data))
-    }
-    const onerror = err => {
-      this.status = 'error'
-      console.error('Error on reconnect', err)
-      Stream.pReject(false)
-    }
-    const onclose = m => {
-      this.connected = new Promise((resolve, reject) => {
-        Stream.pResolve = resolve
-        Stream.pReject = reject
-      })
-      console.log(m)
-      if (this.status === 'closing') {
-        this.status = 'closed'
-      } else { // reconnect
-        this.endpoint = new WS(`${stream}`, { onmessage, onopen: this.onreconnect, onerror, onclose })
-      }
-    }
-    return new Promise((resolve, reject) => {
-      const onopen = () => {
-        this.status = 'connected'
-        Stream.pResolve(true)
-        resolve(this.endpoint)
-      }
-      const onerror = err => {
-        this.status = 'error'
-        Stream.pReject(false)
-        reject(err)
-      }
-      this.endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
+let dispatcher = (answer) => {
+  if (answer && answer.stream && answer.stream in handlersbystream) {
+    handlersbystream[answer.stream].forEach(e => {
+      e.handler(answer.data)
     })
-  }
-
-  static disconnect (reason = 'byuser') {
-    this.status = 'closing'
-    this.endpoint.close(reason)
-  }
-
-  static async send (data) {
-    await this.connected
-    return limiter.schedule(() => {
-      console.log('Send data', data)
-      this.endpoint.send(JSON.stringify(data))
-    })
-  }
-
-  static _request (request) {
-    return new Promise((resolve, reject) => {
-      try {
-        const id = new Date().getTime()
-        const oldhandler = Stream.dispatcher
-        Stream.dispatcher = data => {
-          if (data && data.id === id) {
-            Stream.dispatcher = oldhandler
-            resolve(data.result)
-          } else {
-            oldhandler(data)
-          }
-        }
-        Stream.send({ ...request, id })
-      } catch (err) {
-        reject(err)
-      }
-    })
-  }
-
-  static list () {
-    return this._request({
-      method: 'LIST_SUBSCRIPTIONS'
-    })
-  }
-
-  static async subscribe (...names) {
-    const subscribed = await this.list()
-    const streams = names.filter(n => !subscribed.includes[n])
-    return this._request({
-      method: 'SUBSCRIBE',
-      params: streams
-    })
-  }
-
-  static async unsubscribe (...names) {
-    const subscribed = await this.list()
-    const streams = names.filter(n => subscribed.includes[n])
-    return this._request({
-      method: 'UNSUBSCRIBE',
-      params: streams
-    })
-  }
-
-  static async listen (handler, ...streams) {
-    const ids = streams.map(s => this.install(s, handler))
-    await this.subscribe(...streams)
-    return ids
-  }
-
-  static dismiss (...ids) {
-    const streams = ids.map(id => this.uninstall(id)).filter(s => s)
-    return this.unsubscribe(...streams)
+  } else {
+    console.warn('Unexpected data', answer)
   }
 }
+
+function onreconnect () {
+  console.log('Socket reconnected')
+  status = 'connected'
+  pResolve(true)
+  const streams = Object.keys(handlersbystream)
+  subscribe(...streams)
+}
+
+export function connect () {
+  status = 'connecting'
+  const onmessage = m => {
+    dispatcher(JSON.parse(m.data))
+  }
+  const onerror = err => {
+    status = 'error'
+    console.error('Error on reconnect', err)
+    pReject(false)
+  }
+  const onclose = m => {
+    connected = new Promise((resolve, reject) => {
+      pResolve = resolve
+      pReject = reject
+    })
+    console.log(m)
+    if (status === 'closing') {
+      status = 'closed'
+    } else { // reconnect
+      endpoint = new WS(`${stream}`, { onmessage, onopen: onreconnect, onerror, onclose })
+    }
+  }
+  return new Promise((resolve, reject) => {
+    const onopen = () => {
+      status = 'connected'
+      pResolve(true)
+      resolve(endpoint)
+    }
+    const onerror = err => {
+      status = 'error'
+      pReject(false)
+      reject(err)
+    }
+    endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
+  })
+}
+
+export function disconnect (reason = 'byuser') {
+  status = 'closing'
+  endpoint.close(reason)
+}
+
+export async function send (data) {
+  await connected
+  return limiter.schedule(() => {
+    console.log('Send data', data)
+    endpoint.send(JSON.stringify(data))
+  })
+}
+
+function _request (request) {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = new Date().getTime()
+      const oldhandler = dispatcher
+      dispatcher = data => {
+        if (data && data.id === id) {
+          dispatcher = oldhandler
+          resolve(data.result)
+        } else {
+          oldhandler(data)
+        }
+      }
+      send({ ...request, id })
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+export function list () {
+  return _request({
+    method: 'LIST_SUBSCRIPTIONS'
+  })
+}
+
+export async function subscribe (...names) {
+  const subscribed = await list()
+  const streams = names.filter(n => !subscribed.includes[n])
+  return _request({
+    method: 'SUBSCRIBE',
+    params: streams
+  })
+}
+
+export async function unsubscribe (...names) {
+  const subscribed = await list()
+  const streams = names.filter(n => subscribed.includes[n])
+  return _request({
+    method: 'UNSUBSCRIBE',
+    params: streams
+  })
+}
+
+export async function listen (handler, ...streams) {
+  const ids = streams.map(s => install(s, handler))
+  await subscribe(...streams)
+  return ids
+}
+
+export function dismiss (...ids) {
+  const streams = ids.map(id => uninstall(id)).filter(s => s)
+  return unsubscribe(...streams)
+}
+// }
