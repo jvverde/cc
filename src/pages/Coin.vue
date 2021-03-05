@@ -26,10 +26,9 @@ export default {
   watch: {
     stream: {
       immediate: true,
-      handler (val, old) {
-        if (old && this.streamid.length) dismiss(...this.streamid)
-        console.log('Watch a change to', this.stream)
-        this.streamid = listen(this.candles, this.stream)
+      async handler (val, old) {
+        if (old && this.streamid.length) await dismiss(...this.streamid)
+        this.streamid = await listen(this.candles, this.stream)
       }
     }
   },
@@ -41,6 +40,7 @@ export default {
   mounted () {
   },
   beforeDestroy () {
+    console.log('destroy...')
     if (this.streamid) dismiss(...this.streamid)
   }
 }

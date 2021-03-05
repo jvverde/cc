@@ -26,6 +26,58 @@ putInWait()
 const handlersbystream = {}
 const handlersbyid = {}
 
+function dispatcher (answer) {
+  if (answer && answer.stream && answer.stream in handlersbystream) {
+    handlersbystream[answer.stream].forEach(e => {
+      e.handler(answer.data)
+    })
+  } else if (answer && answer.id && answer.id in handlersbyid) {
+    handlersbyid[answer.id](answer.result)
+    delete handlersbyid[answer.id]
+  } else {
+    console.warn('Unexpected data', answer)
+  }
+}
+
+function onreconnect () {
+  console.info('Socket reconnected')
+  status = 'connected'
+  pResolve(true)
+  const streams = Object.keys(handlersbystream)
+  subscribe(...streams)
+}
+
+export function connect () {
+  status = 'connecting'
+  const onmessage = m => {
+    dispatcher(JSON.parse(m.data))
+  }
+  const onerror = err => {
+    status = 'error'
+    console.error('Error on connect', err)
+    pReject(err)
+  }
+  const onclose = m => {
+    putInWait()
+    if (status === 'closing') {
+      status = 'closed'
+    } else { // reconnect
+      endpoint = new WS(`${stream}`, { onmessage, onopen: onreconnect, onerror, onclose })
+    }
+  }
+  const onopen = () => {
+    status = 'connected'
+    pResolve(endpoint)
+  }
+  endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
+  return connectedPromise
+}
+
+export function disconnect (reason = 'byuser') {
+  status = 'closing'
+  endpoint.close(reason)
+}
+
 function install (stream, handler) {
   const id = new Date().getTime() + '_' + Math.random()
   if (!handlersbystream[stream]) {
@@ -45,61 +97,6 @@ function uninstall (id) {
     }
   }
   return false
-}
-
-function dispatcher (answer) {
-  if (answer && answer.stream && answer.stream in handlersbystream) {
-    handlersbystream[answer.stream].forEach(e => {
-      e.handler(answer.data)
-    })
-  } else if (answer.result && answer.id && answer.id in handlersbyid) {
-    handlersbyid[answer.id](answer.result)
-    delete handlersbyid[answer.id]
-  } else if (answer.result === null) {
-    console.info('Receive a answer with null result', answer)
-  } else {
-    console.warn('Unexpected data', answer)
-  }
-}
-
-function onreconnect () {
-  console.log('Socket reconnected')
-  status = 'connected'
-  pResolve(true)
-  const streams = Object.keys(handlersbystream)
-  subscribe(...streams)
-}
-
-export function connect () {
-  status = 'connecting'
-  const onmessage = m => {
-    dispatcher(JSON.parse(m.data))
-  }
-  const onerror = err => {
-    status = 'error'
-    console.error('Error on connect', err)
-    pReject(err)
-  }
-  const onclose = m => {
-    putInWait()
-    console.log(m)
-    if (status === 'closing') {
-      status = 'closed'
-    } else { // reconnect
-      endpoint = new WS(`${stream}`, { onmessage, onopen: onreconnect, onerror, onclose })
-    }
-  }
-  const onopen = () => {
-    status = 'connected'
-    pResolve(endpoint)
-  }
-  endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
-  return connectedPromise
-}
-
-export function disconnect (reason = 'byuser') {
-  status = 'closing'
-  endpoint.close(reason)
 }
 
 export async function send (data) {
@@ -130,7 +127,8 @@ export function list () {
 
 export async function subscribe (...names) {
   const subscribed = await list()
-  const streams = names.filter(n => !subscribed.includes[n])
+  const streams = names.filter(name => !subscribed.includes(name))
+  if (streams.length === 0) return Promise.resolve(0)
   return _request({
     method: 'SUBSCRIBE',
     params: streams
@@ -139,7 +137,8 @@ export async function subscribe (...names) {
 
 export async function unsubscribe (...names) {
   const subscribed = await list()
-  const streams = names.filter(n => subscribed.includes[n])
+  const streams = names.filter(name => subscribed.includes(name))
+  if (streams.length === 0) return Promise.resolve(0)
   return _request({
     method: 'UNSUBSCRIBE',
     params: streams
