@@ -11,6 +11,7 @@ export default {
   name: 'coin',
   data () {
     return {
+      streamid: []
     }
   },
   computed: {
@@ -26,9 +27,9 @@ export default {
     stream: {
       immediate: true,
       handler (val, old) {
-        if (old) dismiss(old)
-        console.log(this.stream)
-        listen(this.candles, this.stream)
+        if (old && this.streamid.length) dismiss(...this.streamid)
+        console.log('Watch a change to', this.stream)
+        this.streamid = listen(this.candles, this.stream)
       }
     }
   },
@@ -40,6 +41,7 @@ export default {
   mounted () {
   },
   beforeDestroy () {
+    if (this.streamid) dismiss(...this.streamid)
   }
 }
 </script>

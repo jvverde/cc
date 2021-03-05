@@ -34,15 +34,16 @@
 <script>
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
-import { connect, disconnect } from 'src/helpers/stream'
-// import { enqueue } from 'src/data'
+import { connect, disconnect, listen, dismiss } from 'src/helpers/stream'
+import { enqueue } from 'src/data'
 
 export default {
   name: 'MainLayout',
   components: { mainmenu },
   data () {
     return {
-      leftDrawerOpen: false
+      leftDrawerOpen: false,
+      streamid: []
     }
   },
   computed: {
@@ -57,12 +58,13 @@ export default {
   async mounted () {
     await connect()
     console.log('connected at mainlauyoout')
-    // Stream.listen((data) => {
-    //   const wanted = data.filter(t => this.watchSet.has(t.s))
-    //   enqueue(wanted)
-    // }, '!miniTicker@arr')
+    this.streamid = listen((data) => {
+      const wanted = data.filter(t => this.watchSet.has(t.s))
+      enqueue(wanted)
+    }, '!miniTicker@arr')
   },
   beforeDestroy () {
+    dismiss(...this.streamid)
     this.stop()
   }
 }

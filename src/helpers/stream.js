@@ -12,12 +12,19 @@ let endpoint
 let status = ''
 let pResolve
 let pReject
-let connected = new Promise((resolve, reject) => {
-  pResolve = resolve
-  pReject = reject
-})
+let connectedPromise
+
+const putInWait = () => {
+  connectedPromise = new Promise((resolve, reject) => {
+    pResolve = resolve
+    pReject = reject
+  })
+}
+
+putInWait()
 
 const handlersbystream = {}
+const handlersbyid = {}
 
 function install (stream, handler) {
   const id = new Date().getTime() + '_' + Math.random()
@@ -40,11 +47,16 @@ function uninstall (id) {
   return false
 }
 
-let dispatcher = (answer) => {
+function dispatcher (answer) {
   if (answer && answer.stream && answer.stream in handlersbystream) {
     handlersbystream[answer.stream].forEach(e => {
       e.handler(answer.data)
     })
+  } else if (answer.result && answer.id && answer.id in handlersbyid) {
+    handlersbyid[answer.id](answer.result)
+    delete handlersbyid[answer.id]
+  } else if (answer.result === null) {
+    console.info('Receive a answer with null result', answer)
   } else {
     console.warn('Unexpected data', answer)
   }
@@ -65,14 +77,11 @@ export function connect () {
   }
   const onerror = err => {
     status = 'error'
-    console.error('Error on reconnect', err)
-    pReject(false)
+    console.error('Error on connect', err)
+    pReject(err)
   }
   const onclose = m => {
-    connected = new Promise((resolve, reject) => {
-      pResolve = resolve
-      pReject = reject
-    })
+    putInWait()
     console.log(m)
     if (status === 'closing') {
       status = 'closed'
@@ -80,19 +89,12 @@ export function connect () {
       endpoint = new WS(`${stream}`, { onmessage, onopen: onreconnect, onerror, onclose })
     }
   }
-  return new Promise((resolve, reject) => {
-    const onopen = () => {
-      status = 'connected'
-      pResolve(true)
-      resolve(endpoint)
-    }
-    const onerror = err => {
-      status = 'error'
-      pReject(false)
-      reject(err)
-    }
-    endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
-  })
+  const onopen = () => {
+    status = 'connected'
+    pResolve(endpoint)
+  }
+  endpoint = new WS(`${stream}`, { onmessage, onopen, onerror, onclose })
+  return connectedPromise
 }
 
 export function disconnect (reason = 'byuser') {
@@ -101,7 +103,7 @@ export function disconnect (reason = 'byuser') {
 }
 
 export async function send (data) {
-  await connected
+  await connectedPromise
   return limiter.schedule(() => {
     console.log('Send data', data)
     endpoint.send(JSON.stringify(data))
@@ -112,15 +114,7 @@ function _request (request) {
   return new Promise((resolve, reject) => {
     try {
       const id = new Date().getTime()
-      const oldhandler = dispatcher
-      dispatcher = data => {
-        if (data && data.id === id) {
-          dispatcher = oldhandler
-          resolve(data.result)
-        } else {
-          oldhandler(data)
-        }
-      }
+      handlersbyid[id] = resolve
       send({ ...request, id })
     } catch (err) {
       reject(err)
