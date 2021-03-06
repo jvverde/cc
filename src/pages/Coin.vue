@@ -3,6 +3,7 @@
     <div class="full-width q-my-md" ref="coinpage">
       <trading-vue :data="dc" :width="width" :height="height"
           ref="tradingVue"
+          :overlays="overlays"
           :color-back="colors.colorBack"
           :color-grid="colors.colorGrid"
           :color-text="colors.colorText">
@@ -15,6 +16,7 @@
 <script>
 import { listen, dismiss } from 'src/helpers/stream'
 import { TradingVue, DataCube } from 'trading-vue-js'
+import Maximum from 'src/charts/Maximum'
 
 export default {
   name: 'coin',
@@ -34,7 +36,17 @@ export default {
           indexBased: false,
           // tf: 6000,
           data: []
-        }
+        },
+        onchart: [
+          {
+            name: 'Maximum',
+            type: 'MAXIMUM',
+            data: [],
+            settings: {
+              'z-index': 5
+            }
+          }
+        ]
       }, {
         auto_scroll: true
       }),
@@ -44,7 +56,8 @@ export default {
         colorBack: '#fff',
         colorGrid: '#eee',
         colorText: '#333'
-      }
+      },
+      overlays: [Maximum]
     }
   },
   components: {
@@ -96,7 +109,7 @@ export default {
       }
 
       // this.dc.update({
-      //   chart: [this.sec * 1000, this.open, this.high, this.low, this.close, this.volume]
+      //   candle: [time, this.open, this.high, this.low, this.close, this.volume]
       // })
     },
     onresize () {
