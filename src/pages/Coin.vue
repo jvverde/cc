@@ -4,6 +4,8 @@
       <trading-vue :data="dc" :width="width" :height="height"
           ref="tradingVue"
           :overlays="overlays"
+          :legend-buttons="['MAXIMUM', 'settings', 'remove']"
+          @legend-button-click="on_button_click"
           :color-back="colors.colorBack"
           :color-grid="colors.colorGrid"
           :color-text="colors.colorText">
@@ -24,6 +26,7 @@ export default {
   name: 'coin',
   data () {
     return {
+      stop: false,
       candle: undefined,
       max: { time: -Infinity, price: -Infinity },
       min: { time: -Infinity, price: Infinity },
@@ -99,18 +102,21 @@ export default {
         const diff = time + 1000 - x2
         this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
       }
-
-      const [max, min] = [this.max, this.min]
-      this.max = updateMax({ time, price: h, max }, 6e4)
-      this.min = updateMin({ time, price: l, min }, 6e4)
+      const { max, min } = this
+      this.max = updateMax({ time, price: h, max }, 30 * 24 * 3600e3)
+      this.min = updateMin({ time, price: l, min }, 30 * 24 * 3600e3)
 
       this.dc.update({
-        Maximum: [time, this.max, this.min]
+        Maximum: { max, min }
       })
     },
     onresize () {
       this.width = this.$refs.coinpage.clientWidth
       this.height = this.$refs.coinpage.clientHeight - 36
+    },
+    on_button_click (e) {
+      console.log('event', e)
+      this.stop = !this.stop
     }
   },
   mounted () {
@@ -118,12 +124,7 @@ export default {
     console.log('sett', this.dc.sett)
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
-    // const now = Date.now()
-    // this.$refs.tradingVue.setRange(now - 6e4, now + 1e3)
     this.candle = new CandleOf(1000, this.oncandle)
-    // const now = Date.now()
-    // const pass = now - 6e4
-    // this.$refs.tradingVue.setRange(pass, now)
   },
   beforeDestroy () {
     console.log('destroy...')

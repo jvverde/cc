@@ -18,7 +18,7 @@ export function updateMax ({ price, time, max }, delta = 6e4) {
     }
     point.next = current // The maximum chain always ends on current value (Except if it is max value)
   }
-  return max
+  return { ...max, delta }
 }
 
 export function updateMin ({ price, time, min }, delta = 6e4) {
@@ -36,5 +36,5 @@ export function updateMin ({ price, time, min }, delta = 6e4) {
     }
     point.next = current
   }
-  return min
+  return { ...min, delta }
 }
