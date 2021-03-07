@@ -17,16 +17,21 @@
 import { listen, dismiss } from 'src/helpers/stream'
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
+import { updateMax, updateMin } from 'src/helpers/MaxMin'
+import { CandleOf } from 'src/helpers/Candle'
 
 export default {
   name: 'coin',
   data () {
     return {
+      candle: undefined,
+      max: { time: -Infinity, price: -Infinity },
+      min: { time: -Infinity, price: Infinity },
       low: Infinity,
       high: -Infinity,
       open: undefined,
       close: undefined,
-      sec: 0,
+      seconds: 0,
       volume: 0,
       start: new Date().getTime(),
       streamid: [],
@@ -77,40 +82,31 @@ export default {
       immediate: true,
       async handler (val, old) {
         if (old && this.streamid.length) await dismiss(...this.streamid)
-        this.streamid = await listen(this.trades, this.stream)
+        this.streamid = await listen(this.ontrade, this.stream)
       }
     }
   },
   methods: {
-    trades (t) {
-      const p = Number(t.p)
-      if (this.low > p) this.low = p
-      if (this.high < p) this.high = p
-      if (this.open === undefined) this.open = p
-      this.volume += Number(t.q)
-      const sec = 0 | t.E / 1000
-      if (this.sec < sec) {
-        this.close = p
-        this.sec = sec
-        this.showcandle()
-        this.volume = 0
-        this.open = undefined
-        this.low = Infinity
-        this.high = -Infinity
-      }
+    ontrade (t) {
+      const time = t.E
+      const price = Number(t.p)
+      this.candle.insert(time, price, Number(t.q))
     },
-    showcandle () {
-      const time = this.sec * 1000
-      this.dc.merge('chart.data', [[time, this.open, this.high, this.low, this.close, this.volume]])
+    oncandle ({ o, h, l, c, v, time }) {
+      this.dc.merge('chart.data', [[time, o, h, l, c, v]])
       const [x1, x2] = this.$refs.tradingVue.getRange()
-      if (x2 < time) {
-        const diff = time - x2
+      if (x2 < time + 1000) {
+        const diff = time + 1000 - x2
         this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
       }
 
-      // this.dc.update({
-      //   candle: [time, this.open, this.high, this.low, this.close, this.volume]
-      // })
+      const [max, min] = [this.max, this.min]
+      this.max = updateMax({ time, price: h, max }, 6e4)
+      this.min = updateMin({ time, price: l, min }, 6e4)
+
+      this.dc.update({
+        Maximum: [time, this.max, this.min]
+      })
     },
     onresize () {
       this.width = this.$refs.coinpage.clientWidth
@@ -122,6 +118,9 @@ export default {
     console.log('sett', this.dc.sett)
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
+    // const now = Date.now()
+    // this.$refs.tradingVue.setRange(now - 6e4, now + 1e3)
+    this.candle = new CandleOf(1000, this.oncandle)
     // const now = Date.now()
     // const pass = now - 6e4
     // this.$refs.tradingVue.setRange(pass, now)
