@@ -4,7 +4,7 @@ const localStorageName = 'ccmonStorage.json'
 
 const store = {
   tickers: {},
-  size: 3600
+  size: 24 * 3600
 }
 
 export const intervales = [
@@ -13,14 +13,6 @@ export const intervales = [
   900,
   1800,
   3600
-]
-
-export const slideWindow = [
-  6e3, // 1 min
-  3e5, // 5 min
-  9e5, // 15min
-  1.8e6, // 30min
-  3.6e6 // 1hour
 ]
 
 export function enqueue (tickers) {
