@@ -4,6 +4,7 @@
       <trading-vue :data="dc" :width="width" :height="height"
           ref="tradingVue"
           :overlays="overlays"
+          :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 60}"
           :legend-buttons="['MAXIMUM', 'settings', 'remove']"
           @legend-button-click="on_button_click"
           :color-back="colors.colorBack"

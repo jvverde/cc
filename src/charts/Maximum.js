@@ -1,12 +1,5 @@
 import { Overlay } from 'trading-vue-js'
 
-// const colornames = ['marron', 'brown', 'SaddleBrown', 'Sienna',
-//   'Chocolate', 'DarkGoldenrod', 'Peru', 'RosyBrown', 'Goldenrod',
-//   'SandyBrown', 'Tan', 'Burlywood', 'Wheat', 'NavajoWhite',
-//   'Bisque', 'BlanchedAlmond', 'Cornsilk']
-// const colors = (i) => {
-//   return colornames[i % colornames.length]
-// }
 export default {
   name: 'Maximum',
   mixins: [Overlay],
@@ -43,57 +36,37 @@ export default {
       ctx.stroke()
     },
     draw (ctx) {
-      // console.log('len=', this.$props.data.length)
+      // console.log(this.$props)
       const data = this.$props.data || []
       if (data.length < 1) return
-      const point = data[data.length - 1]
+      const last = data[data.length - 1]
 
-      const time = point[0]
-      const { max, min } = point[1]
+      const time = last[0]
+      const { max, min } = last[1]
       let lM = max, lm = min
       while (lM.next) lM = lM.next // find last max = current candle
       while (lm.next) lm = lm.next // find last min = current candle
 
-      // ctx.lineWidth = 1
-      // let m = max, last = time + 1
-      // ctx.strokeStyle = 'cyan'
-      // while (m.next) {
-      //   const diff = (time - m.time) / (time - last)
-      //   if (diff < 0.8) {
-      //     this.line(ctx, m, lM)
-      //     last = m.time
-      //   } // else console.log(diff, m)
-      //   m = m.next
-      // }
-      // m = min
-      // last = time + 1
-      // ctx.strokeStyle = 'purple'
-      // while (m.next) {
-      //   const diff = (time - m.time) / (time - last)
-      //   if (diff < 0.6) {
-      //     this.line(ctx, m, lm)
-      //     last = m.time
-      //   } // else console.log(diff, m)
-      //   m = m.next
-      // }
-
       const points = []
       let a = max, b = min
-      while (a.next && b.next) {
+      do {
         if (a.time < b.time) {
           points.push({ ...a, type: 'M' })
-          while (a.next && a.time <= b.time) a = a.next
+          // while (a.next && a.time <= b.time) a = a.next
+          do { a = a.next } while (a && a.time <= b.time)
         } else {
           points.push({ ...b, type: 'm' })
-          while (b.next && b.time <= a.time) b = b.next
+          // while (b.next && b.time <= a.time) b = b.next
+          do { b = b.next } while (b && b.time <= a.time)
         }
-      }
+      // } while (a.next && b.next)
+      } while (a && b)
 
       let len = points.length
       if (len && points[len - 1].type === 'M') {
-        points.push(lm)
+        points.push({ ...lm, type: 'm' })
       } else {
-        points.push(lM)
+        points.push({ ...lM, type: 'M' })
       }
       while (len--) {
         ctx.setLineDash([])
