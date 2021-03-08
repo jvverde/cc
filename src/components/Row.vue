@@ -3,7 +3,7 @@
     <div class="row justify-center q-mx-lg">
       <div class="col-auto q-pr-sm">{{ftime}}</div>
       <div class="col">{{symbol}}</div>
-      <div class="col text-left" :class="alertcolor(price - lastprice)">{{price}}</div>
+      <div class="col text-left" :class="alertcolor(chgprice)">{{price}}</div>
       <div class="col-auto q-px-sm" :class="alertcolor(chg24h)">{{numeral(chg24h).format('0.0%')}}</div>
       <div
         v-for="(c, i) in changes" :key="i"
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { listen, unlisten, intervales } from 'src/data'
+import { listen, unlisten } from 'src/data'
 import { firstOf } from 'src/helpers/MaxMin'
 import numeral from 'numeral'
 
@@ -44,20 +44,8 @@ export default {
   name: 'row',
   data () {
     return {
-      price: 0,
-      lastprice: 0,
-      max: -Infinity,
-      lastmax: -Infinity,
-      min: Infinity,
-      lastmin: Infinity,
-      time: 0,
-      ftime: '',
-      chg24h: 0,
-      changes: intervales.map(() => ({})),
-      volume: 0,
-      quote: 0,
-      m: {},
-      M: {}
+      lastticket: {},
+      currentticket: {}
     }
   },
   props: {
@@ -71,10 +59,21 @@ export default {
   components: {
   },
   computed: {
+    price () { return Number(this.currentticket.price) },
+    lastrice () { return Number(this.lastticket.price) },
+    chgprice () { return this.price - this.lastprice },
+    time () { return this.currentticket.time },
+    ftime () { return new Date(this.time).toLocaleTimeString() },
+    changes () { return this.currentticket.changes },
+    chg24h () { return (this.currentticket.c - this.currentticket.o) / this.currentticket.o },
+    volume () { return this.currentticket.v },
+    quote () { return this.currentticket.q },
+    min () { return this.currentticket.min },
+    max () { return this.currentticket.max },
     range () {
       return delta => {
-        const m = firstOf(delta, this.m).price || 1
-        const M = firstOf(delta, this.M).price || 1
+        const m = firstOf(delta, this.min).price || 1
+        const M = firstOf(delta, this.max).price || 1
         return (M - m) / (M + m) * 2
       }
     }
@@ -84,22 +83,8 @@ export default {
       console.log(v)
     },
     ticker (t) {
-      // console.log('ticker@row:', t)
-      this.lastprice = this.price
-      this.price = Number(t.price)
-      this.time = t.time
-      this.ftime = new Date(t.time).toLocaleTimeString()
-      this.changes = t.changes
-      this.chg24h = (t.c - t.o) / t.o
-      this.volume = t.v
-      this.quote = t.q
-      this.lastmax = this.max
-      this.max = t.max.price
-      this.lastmin = this.min
-      this.min = t.min.price
-      this.M = t.max
-      this.m = t.min
-      // console.log(this.m)
+      this.lastticket = this.currentticket
+      this.currentticket = t
     },
     numeral (v) {
       return numeral(v)
