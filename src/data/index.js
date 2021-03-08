@@ -66,7 +66,7 @@ if (localStorage) {
     if (tickers instanceof Object) {
       store.size = size
       for (const symbol in tickers) {
-        const t = ((tickers[symbol].hist || {}).buff || []).filter(t => t instanceof Object && t.s === symbol)
+        const t = (tickers[symbol].buff || []).filter(t => t instanceof Object && t.s === symbol)
         enqueue(t)
       }
       // store.tickers = tickers

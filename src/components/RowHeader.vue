@@ -6,9 +6,9 @@
       <div class="col text-left">Price</div>
       <div class="col-auto text-left q-px-xs">Chg (24h)</div>
       <div class="col text-left" v-for="(v,i) in intervales" :key="i">Chg ({{v}}t)</div>
-      <div class="col text-right">Min</div>
-      <div class="col text-center">Range</div>
-      <div class="col text-left">Max</div>
+      <div class="col-auto">Rg[1m] </div>
+      <div class="col-auto">Rg[5m] </div>
+      <div class="col-auto">Rg[15m]</div>
       <div class="col text-right">Volume</div>
       <div class="col text-right">Quote</div>
     </div>
