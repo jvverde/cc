@@ -33,20 +33,17 @@
       </q-item>
       <q-item>
         <q-item-section>
-          <rowheader/>
+          <rowheader @select="setColumnOrder"/>
         </q-item-section>
         <q-item-section side>
           <q-btn icon="none" disable flat dense size="xs" round/>
         </q-item-section>
       </q-item>
-      <q-item>
-        <q-input v-model="n" label="order" type="number"/>
-      </q-item>
       <q-item dense v-for="(symbol, index) in order" :key="index"
         :to="{ name: 'coin', params: { symbol: symbol } }"
         clickable>
         <q-item-section>
-          <row :symbol="symbol" :cb="cb(index)" :col="1 * col"/>
+          <row :symbol="symbol" :cb="cb(index)" :col="col"/>
         </q-item-section>
         <q-item-section side>
           <q-btn icon="close" color="negative" flat dense size="xs" round @click="removeAtIndex(index)"/>
@@ -83,7 +80,7 @@ export default {
       if (!this.orderby.length) {
         return this.follow
       } else {
-        return this.orderby.map(e => e.s)
+        return this.orderby.map(e => e.s) // Order according the order by
       }
     },
     RE () {
@@ -101,25 +98,31 @@ export default {
     rowheader
   },
   watch: {
-    n (v) {
-      if (Number.isNaN(v)) return
-      this.col = v
-    },
     ordermap () {
-      if (this.ordermap.length && this.ordermap.length >= this.order.length) {
-        this.orderby = [...this.ordermap].sort((a, b) => {
-          if (a.v < b.v) return -1
-          else if (a.v > b.v) return 1
-          return 0
-        })
-        this.ordermap.length = 0
+      if (this.ordermap.length >= this.order.length) {
+        const ordmap = [...this.ordermap].filter(e => e) // Not select possible undefined values
+        if (ordmap.length >= this.order.length) { // Only after all values are defined
+          this.ordermap.length = 0 // Reset ordermap
+          this.orderby = ordmap.sort((a, b) => { // Now defined the order
+            if (typeof a !== typeof b) return 0
+            if (a.v < b.v) return -1
+            if (a.v > b.v) return 1
+            return 0
+          })
+        }
       }
     }
   },
   methods: {
+    setColumnOrder (i) {
+      if (i === this.col) {
+        this.orderby = this.orderby.reverse()
+      } else {
+        this.col = i
+      }
+    },
     cb (i) {
       return (v) => {
-        console.log('args', i, v)
         this.$set(this.ordermap, i, { v, s: this.order[i] })
       }
     },

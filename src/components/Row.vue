@@ -1,6 +1,6 @@
 <template>
   <div class="col line">
-    <div class="row justify-center q-mx-lg">
+    <div class="row justify-center q-mx-lg" v-if="ready">
       <div class="col-auto q-pr-sm">{{ftime}}</div>
       <div class="col">{{symbol}}</div>
       <div class="col text-left" :class="alertcolor(chgprice)">{{price}}</div>
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { listen, unlisten } from 'src/data'
+import { listen, unlisten, intervales } from 'src/data'
 import { firstOf } from 'src/helpers/MaxMin'
 import numeral from 'numeral'
 
@@ -87,19 +87,28 @@ export default {
       }
     },
     columns () {
-      const { time, ftime, symbol, price, chg24h, changes, range, volume, quote } = this
-      return [ftime, symbol, price, chg24h, ...[changes.map(c => c.val)],
+      const {
+        time, ftime, symbol, price, chg24h, volume, quote,
+        changes = new Array(intervales).map(c => ({ val: 0 })),
+        range = () => 0
+      } = this
+      return [ftime, symbol, price, chg24h, ...changes.map(c => c.val),
         range(time - 6e4), range(time - 3e5), range(time - 9e5), volume, quote
       ]
-    }
+    },
+    ready () { return typeof this.price === 'number' && !isNaN(this.price) }
     // columns () { return Object.keys(this.$options.computed) }
   },
   watch: {
     col (i) {
-      // if (v in this) this.cb(this[v])
-      const r = this.columns[i]
-      console.log('r', r)
-      if (r !== undefined) this.cb(r)
+      if (typeof i !== 'number') return
+      try {
+        // console.log(this.columns)
+        const value = this.columns[i]
+        if (value !== undefined) this.cb(value)
+      } catch (e) {
+        console.warn('Row warn', i, e)
+      }
     },
     symbol (v) {
       this.lastticket = this.currentticket = {}
