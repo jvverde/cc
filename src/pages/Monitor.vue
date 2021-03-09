@@ -40,13 +40,13 @@
         </q-item-section>
       </q-item>
       <q-item>
-        <q-input v-model="col" label="order"/>
+        <q-input v-model="n" label="order" type="number"/>
       </q-item>
       <q-item dense v-for="(symbol, index) in order" :key="index"
         :to="{ name: 'coin', params: { symbol: symbol } }"
         clickable>
         <q-item-section>
-          <row :symbol="symbol" :cb="cb(index)" :col="col"/>
+          <row :symbol="symbol" :cb="cb(index)" :col="1 * col"/>
         </q-item-section>
         <q-item-section side>
           <q-btn icon="close" color="negative" flat dense size="xs" round @click="removeAtIndex(index)"/>
@@ -67,7 +67,8 @@ export default {
   name: 'Monitor',
   data () {
     return {
-      col: 'time',
+      col: 0,
+      n: 0,
       filter: '',
       follow: [],
       ordermap: [],
@@ -100,6 +101,10 @@ export default {
     rowheader
   },
   watch: {
+    n (v) {
+      if (Number.isNaN(v)) return
+      this.col = v
+    },
     ordermap () {
       if (this.ordermap.length && this.ordermap.length >= this.order.length) {
         this.orderby = [...this.ordermap].sort((a, b) => {
@@ -114,7 +119,7 @@ export default {
   methods: {
     cb (i) {
       return (v) => {
-        console.log('args', i, v, this.col)
+        console.log('args', i, v)
         this.$set(this.ordermap, i, { v, s: this.order[i] })
       }
     },

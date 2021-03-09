@@ -58,20 +58,11 @@ export default {
       required: true
     },
     col: {
-      type: String
+      type: Number
     },
     isFirst: {
       type: Boolean,
       default: false
-    }
-  },
-  watch: {
-    col (v) {
-      if (v in this) this.cb(this[v])
-    },
-    symbol (v) {
-      this.lastticket = this.currentticket = {}
-      listen(v, this.ticker)
     }
   },
   components: {
@@ -94,6 +85,25 @@ export default {
         const M = firstOf(delta, this.max).price || 1
         return (M - m) / (M + m) * 2
       }
+    },
+    columns () {
+      const { time, ftime, symbol, price, chg24h, changes, range, volume, quote } = this
+      return [ftime, symbol, price, chg24h, ...[changes.map(c => c.val)],
+        range(time - 6e4), range(time - 3e5), range(time - 9e5), volume, quote
+      ]
+    }
+    // columns () { return Object.keys(this.$options.computed) }
+  },
+  watch: {
+    col (i) {
+      // if (v in this) this.cb(this[v])
+      const r = this.columns[i]
+      console.log('r', r)
+      if (r !== undefined) this.cb(r)
+    },
+    symbol (v) {
+      this.lastticket = this.currentticket = {}
+      listen(v, this.ticker)
     }
   },
   methods: {
