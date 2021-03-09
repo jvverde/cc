@@ -24,15 +24,12 @@ export function enqueue (tickers) {
       store.tickers[symbol] = new Ticker(store.size)
     }
     const ticker = store.tickers[symbol]
-
     ticker.push(t)
     const changes = []
     for (const i of intervales) {
       changes.push(ticker.chg(i))
     }
-
     const { c: price, E: time } = t
-
     const { max, min } = ticker.maxmin
 
     if (ticker.callback) ticker.callback({ ...t, time, price, changes, min, max })

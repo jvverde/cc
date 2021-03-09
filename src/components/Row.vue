@@ -52,9 +52,27 @@ export default {
     symbol: {
       type: String,
       required: true
+    },
+    cb: {
+      type: Function,
+      required: true
+    },
+    col: {
+      type: String
+    },
+    isFirst: {
+      type: Boolean,
+      default: false
     }
   },
   watch: {
+    col (v) {
+      if (v in this) this.cb(this[v])
+    },
+    symbol (v) {
+      this.lastticket = this.currentticket = {}
+      listen(v, this.ticker)
+    }
   },
   components: {
   },
@@ -66,8 +84,8 @@ export default {
     ftime () { return new Date(this.time).toLocaleTimeString() },
     changes () { return this.currentticket.changes },
     chg24h () { return (this.currentticket.c - this.currentticket.o) / this.currentticket.o },
-    volume () { return this.currentticket.v },
-    quote () { return this.currentticket.q },
+    volume () { return Number(this.currentticket.v) },
+    quote () { return Number(this.currentticket.q) },
     min () { return this.currentticket.min },
     max () { return this.currentticket.max },
     range () {

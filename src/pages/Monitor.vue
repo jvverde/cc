@@ -39,11 +39,14 @@
           <q-btn icon="none" disable flat dense size="xs" round/>
         </q-item-section>
       </q-item>
+      <q-item>
+        <q-input v-model="col" label="order"/>
+      </q-item>
       <q-item dense v-for="(symbol, index) in order" :key="index"
         :to="{ name: 'coin', params: { symbol: symbol } }"
         clickable>
         <q-item-section>
-          <row :symbol="symbol"/>
+          <row :symbol="symbol" :cb="cb(index)" :col="col"/>
         </q-item-section>
         <q-item-section side>
           <q-btn icon="close" color="negative" flat dense size="xs" round @click="removeAtIndex(index)"/>
@@ -64,15 +67,24 @@ export default {
   name: 'Monitor',
   data () {
     return {
+      col: 'time',
       filter: '',
       follow: [],
+      ordermap: [],
+      orderby: [],
       coins: ['BTC', 'USDT', 'ETH', 'BNB', 'USDC', 'BUSD', 'TUSD', 'PAX', 'RUB',
         'AUD', 'BIDR', 'BRL', 'DAI', 'NGN', 'EUR', 'USD', 'GBP', 'TRY'],
       restrict2coins: []
     }
   },
   computed: {
-    order () { return [...this.follow].sort() },
+    order () {
+      if (!this.orderby.length) {
+        return this.follow
+      } else {
+        return this.orderby.map(e => e.s)
+      }
+    },
     RE () {
       const s = this.restrict2coins.join('|.+')
       return new RegExp(`(.+${s})$`)
@@ -88,8 +100,24 @@ export default {
     rowheader
   },
   watch: {
+    ordermap () {
+      if (this.ordermap.length && this.ordermap.length >= this.order.length) {
+        this.orderby = [...this.ordermap].sort((a, b) => {
+          if (a.v < b.v) return -1
+          else if (a.v > b.v) return 1
+          return 0
+        })
+        this.ordermap.length = 0
+      }
+    }
   },
   methods: {
+    cb (i) {
+      return (v) => {
+        console.log('args', i, v, this.col)
+        this.$set(this.ordermap, i, { v, s: this.order[i] })
+      }
+    },
     filterBy (val, update) {
       update(() => {
         this.filter = val
