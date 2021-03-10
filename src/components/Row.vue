@@ -69,7 +69,7 @@ export default {
   },
   computed: {
     price () { return Number(this.currentticket.price) },
-    lastrice () { return Number(this.lastticket.price) },
+    lastprice () { return Number(this.lastticket.price) },
     chgprice () { return this.price - this.lastprice },
     time () { return this.currentticket.time },
     ftime () { return new Date(this.time).toLocaleTimeString() },
