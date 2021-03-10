@@ -10,14 +10,34 @@ export const zigzag = (max, min) => {
   while (lm.next) lm = lm.next // find last min = current candle
 
   const points = []
-  let a = { ...max }, b = { ...min }
+  let a = { ...max }, b = { ...min }, type
   do {
     if (a.time < b.time) {
-      points.push({ ...a, type: 'M' })
-      do { a = a.next } while (a && a.time <= b.time)
+      type = 'M'
+      points.push({ ...a, type })
+      do { a = a.next } while (a && a.time < b.time)
+    } else if (b.time < a.time) {
+      type = 'm'
+      points.push({ ...b, type })
+      do { b = b.next } while (b && b.time < a.time)
+    } else if (a.time === b.time && typeof a.time === 'number') {
+      // console.info('max.time === min.time', type, a, b)
+      if (type === 'm') {
+        type = 'M'
+        points.push({ ...a, type: 'M' })
+        type = 'm'
+        points.push({ ...b, type: 'm' })
+      } else {
+        type = 'm'
+        points.push({ ...b, type: 'm' })
+        type = 'M'
+        points.push({ ...a, type: 'M' })
+      }
+      a = a.next
+      b = b.next
     } else {
-      points.push({ ...b, type: 'm' })
-      do { b = b.next } while (b && b.time <= a.time)
+      console.warn('a is not < b && b is not < a && a !== b', a, b)
+      break
     }
   } while (a && b)
 

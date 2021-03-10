@@ -42,8 +42,8 @@ export class CandleOf extends Candle {
     } else if (period > this.lastperiod) {
       super.close()
       const { o, h, l, c, v } = this
-      const T = period // close time
-      const t = this.lastperiod // open time
+      const T = (this.lastperiod + 1) * this.interval // close time
+      const t = this.lastperiod * this.interval // open time
       this.onclose({ o, h, l, c, v, time, t, T })
       super.open(price, volume)
       this.lastperiod = period

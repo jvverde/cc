@@ -100,11 +100,12 @@ export default {
       const price = Number(t.p)
       this.candle.insert(time, price, Number(t.q))
     },
-    oncandle ({ o, h, l, c, v, time }) {
+    oncandle ({ o, h, l, c, v, t, T }) {
+      const time = (t + T) / 2
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
       const [x1, x2] = this.$refs.tradingVue.getRange()
-      if (x2 < time + 1000) {
-        const diff = time + 1000 - x2
+      if (x2 < T + 100) {
+        const diff = T + 100 - x2
         this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
       }
       const { max, min } = this
@@ -112,7 +113,7 @@ export default {
       this.min = updateMin({ time, price: l, min }, 30 * 24 * 3600e3)
 
       this.dc.update({
-        Maximum: { max, min }
+        Maximum: [T, { max, min }]
       })
     },
     onresize () {
