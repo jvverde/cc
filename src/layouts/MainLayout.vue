@@ -24,9 +24,10 @@
     </q-drawer>
 
     <q-page-container>
-      <keep-alive :max='5'>
+      <router-view />
+      <!--keep-alive :max='5'>
         <router-view />
-      </keep-alive>
+      </keep-alive-->
     </q-page-container>
   </q-layout>
 </template>
@@ -35,7 +36,7 @@
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
 import { connect, disconnect, listen, dismiss } from 'src/helpers/stream'
-import { enqueue } from 'src/data'
+import { enqueueTickers } from 'src/data'
 
 export default {
   name: 'MainLayout',
@@ -60,7 +61,7 @@ export default {
     console.log('connected at mainlauyoout')
     this.streamid = listen((data) => {
       const wanted = data.filter(t => this.watchSet.has(t.s))
-      enqueue(wanted)
+      enqueueTickers(wanted)
     }, '!miniTicker@arr')
   },
   beforeDestroy () {

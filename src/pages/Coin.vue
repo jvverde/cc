@@ -23,6 +23,26 @@ import Maximum from 'src/charts/Maximum'
 import { updateMax, updateMin } from 'src/helpers/MaxMin'
 import { CandleOf } from 'src/helpers/Candle'
 
+const data = {
+  chart: {
+    type: 'Candles',
+    indexBased: false,
+    // tf: 6000,
+    data: []
+  },
+  onchart: [
+    {
+      name: 'Maximum',
+      type: 'MAXIMUM',
+      data: [],
+      settings: {
+        'z-index': 5
+      }
+    }
+  ]
+}
+const settings = { auto_scroll: true }
+
 export default {
   name: 'coin',
   data () {
@@ -39,26 +59,7 @@ export default {
       volume: 0,
       start: new Date().getTime(),
       streamid: [],
-      dc: new DataCube({
-        chart: {
-          type: 'Candles',
-          indexBased: false,
-          // tf: 6000,
-          data: []
-        },
-        onchart: [
-          {
-            name: 'Maximum',
-            type: 'MAXIMUM',
-            data: [],
-            settings: {
-              'z-index': 5
-            }
-          }
-        ]
-      }, {
-        auto_scroll: true
-      }),
+      dc: new DataCube(data, settings),
       width: 800,
       height: 600,
       colors: {
@@ -88,6 +89,9 @@ export default {
         if (old && this.streamid.length) await dismiss(...this.streamid)
         this.streamid = await listen(this.ontrade, this.stream)
       }
+    },
+    symbol () {
+      this.dc = new DataCube(data, settings)
     }
   },
   methods: {
@@ -112,8 +116,12 @@ export default {
       })
     },
     onresize () {
-      this.width = this.$refs.coinpage.clientWidth
-      this.height = this.$refs.coinpage.clientHeight - 36
+      try {
+        this.width = this.$refs.coinpage.clientWidth
+        this.height = this.$refs.coinpage.clientHeight - 36
+      } catch (e) {
+        console.warn('Rezise', e)
+      }
     },
     on_button_click (e) {
       console.log('event', e)

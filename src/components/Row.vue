@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { listen, unlisten, intervales } from 'src/data'
+import { listenTicker, unlistenTicker, intervales } from 'src/data'
 import { firstOf } from 'src/helpers/MaxMin'
 import numeral from 'numeral'
 
@@ -102,17 +102,12 @@ export default {
   watch: {
     col (i) {
       if (typeof i !== 'number') return
-      try {
-        // console.log(this.columns)
-        const value = this.columns[i]
-        if (value !== undefined) this.cb(value)
-      } catch (e) {
-        console.warn('Row warn', i, e)
-      }
+      const value = this.columns[i]
+      if (value !== undefined) this.cb(value)
     },
     symbol (v) {
       this.lastticket = this.currentticket = {}
-      listen(v, this.ticker)
+      listenTicker(v, this.ticker)
     }
   },
   methods: {
@@ -158,10 +153,10 @@ export default {
   },
   mounted () {
     console.log('Install handler for', this.symbol)
-    listen(this.symbol, this.ticker)
+    listenTicker(this.symbol, this.ticker)
   },
   beforeDestroy () {
-    unlisten(this.symbol)
+    unlistenTicker(this.symbol)
   }
 }
 </script>

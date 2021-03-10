@@ -4,6 +4,7 @@ const localStorageName = 'ccmonStorage.json'
 
 const store = {
   tickers: {},
+  aTrades: {},
   size: 24 * 3600
 }
 
@@ -15,7 +16,7 @@ export const intervales = [
   3600
 ]
 
-export function enqueue (tickers) {
+export function enqueueTickers (tickers) {
   for (const t of tickers) {
     t.c = Number(t.c)
     // console.log(t.s, Number(t.c), new Date(t.E).toLocaleTimeString())
@@ -36,14 +37,14 @@ export function enqueue (tickers) {
   }
 }
 
-export function listen (symbol, cb) {
+export function listenTicker (symbol, cb) {
   if (!store.tickers[symbol]) {
     store.tickers[symbol] = new Ticker(store.size)
   }
   store.tickers[symbol].callback = cb
 }
 
-export function unlisten (symbol, cb) {
+export function unlistenTicker (symbol, cb) {
   if (store.tickers[symbol] && store.tickers[symbol].callback) {
     store.tickers[symbol].callback = () => undefined
   }
@@ -56,7 +57,7 @@ if (localStorage) {
       store.size = size
       for (const symbol in tickers) {
         const t = (tickers[symbol].buff || []).filter(t => t instanceof Object && t.s === symbol)
-        enqueue(t)
+        enqueueTickers(t)
       }
       // store.tickers = tickers
     }
