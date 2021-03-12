@@ -31,4 +31,8 @@ export default {
 </script>
 
 <style lang="scss">
+  .header>div:hover {
+    cursor: pointer;
+    opacity: .7;
+  }
 </style>

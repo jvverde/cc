@@ -39,7 +39,8 @@ import { listenTicker, unlistenTicker, intervales } from 'src/data'
 import { firstOf } from 'src/helpers/MaxMin'
 import numeral from 'numeral'
 
-const okLevelColors = ['initial', 'PaleGreen', 'Lime', 'SpringGreen', 'MediumSpringGreen', 'LightGreen', 'LimeGreen']
+const okLevelColorsLight = ['initial', 'PaleGreen', 'Lime', 'SpringGreen', 'MediumSpringGreen', 'LightGreen', 'LimeGreen']
+const okLevelColorsDark = ['initial', 'Green', 'DarkGreen', 'ForestGreen', 'SeaGreen', 'Olive', 'DarkOliveGreen']
 export default {
   name: 'row',
   data () {
@@ -139,8 +140,8 @@ export default {
     },
     level2color (v, lvl) {
       const i = 0 | v / lvl
-      const j = Math.min(okLevelColors.length - 1, i)
-      return okLevelColors[j]
+      const j = Math.min(okLevelColorsLight.length - 1, okLevelColorsDark.length - 1, i)
+      return this.$q.dark.isActive ? okLevelColorsDark[j] : okLevelColorsLight[j]
     },
     alert4color (v, r) {
       return {

@@ -3,14 +3,16 @@
     <div class="full-width q-my-md" ref="coinpage">
       <trading-vue :data="dc" :width="width" :height="height"
           ref="tradingVue"
+          :title-txt="symbol"
           :overlays="overlays"
           :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 60}"
           :legend-buttons="['MAXIMUM', 'settings', 'remove']"
-          @legend-button-click="on_button_click"
+          @legend-button-click="startstop"
           :color-back="colors.colorBack"
           :color-grid="colors.colorGrid"
           :color-text="colors.colorText">
       </trading-vue>
+      <q-btn class="q-mt-sm" color="brown" size="xs" label="Start/Stop" icon="pause" rounded @click="startstop"/>
     </div>
     <q-resize-observer @resize="onresize" />
   </q-page>
@@ -22,12 +24,14 @@ import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import { updateMax, updateMin } from 'src/helpers/MaxMin'
 import { CandleOf } from 'src/helpers/Candle'
+import { zigzag } from 'src/helpers/Utils'
+import { QueueZ } from 'src/helpers/Queue'
 
 const data = {
   chart: {
     type: 'Candles',
     indexBased: false,
-    // tf: 6000,
+    tf: 1000,
     data: []
   },
   onchart: [
@@ -38,15 +42,53 @@ const data = {
       settings: {
         'z-index': 5
       }
+    },
+    {
+      name: 'Split',
+      type: 'Splitters',
+      data: [],
+      settings: {
+        legend: false
+      }
+    },
+    {
+      name: 'Realtime',
+      type: 'Splines',
+      data: [],
+      settings: {
+        legend: false,
+        'z-index': 5,
+        colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed']
+      }
     }
   ]
 }
 const settings = { auto_scroll: true }
 
+class MA {
+  constructor (size) {
+    this.queue = new QueueZ(size)
+    this.sumprod = 0
+    this.quantity = 0
+  }
+
+  update (price, quote) {
+    this.sumprod += price * quote
+    this.quantity += quote
+    const old = this.queue.rotate({ price, quote })
+    if (old) {
+      this.sumprod -= old.price * old.quote
+      this.quantity -= old.quote
+    }
+    return this.sumprod / this.quantity
+  }
+}
+const averages = [5, 25, 100, 500]
 export default {
   name: 'coin',
   data () {
     return {
+      mas: averages.map(v => new MA(v)),
       stop: false,
       candle: undefined,
       max: { time: -Infinity, price: -Infinity },
@@ -98,7 +140,18 @@ export default {
     ontrade (t) {
       const time = t.E
       const price = Number(t.p)
-      this.candle.insert(time, price, Number(t.q))
+      const quote = Number(t.q)
+      this.candle.insert(time, price, quote)
+      // console.log(old, this.sa20 / this.da20)
+      const mas = this.mas.map(m => m.update(price, quote))
+      this.dc.merge('onchart.Realtime.data', [[
+        time,
+        // price,
+        ...mas
+      ]])
+      // this.dc.update({
+      //   Realtime: price
+      // })
     },
     oncandle ({ o, h, l, c, v, t, T }) {
       const time = (t + T) / 2
@@ -106,15 +159,22 @@ export default {
       const [x1, x2] = this.$refs.tradingVue.getRange()
       if (x2 < T + 100) {
         const diff = T + 100 - x2
-        this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
+        if (!this.stop) this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
       }
       const { max, min } = this
       this.max = updateMax({ time, price: h, max }, 30 * 24 * 3600e3)
       this.min = updateMin({ time, price: l, min }, 30 * 24 * 3600e3)
 
-      this.dc.update({
-        Maximum: [T, { max, min }]
-      })
+      const points = zigzag(max, min)
+
+      this.dc.set('onchart.Maximum.data', [[T, max, min, points]])
+      const now = Date.now()
+      this.dc.set('onchart.Split.data', [
+        [now - 1e3, '1s ago', 0, '#FF3080'],
+        [now - 6e4, '1m ago', 0, '#FF80FF'],
+        [now - 3e5, '5m ago', 0, '#80FFFF'],
+        [now - 36e5, '1h ago', 0, '#CCFFCC']
+      ])
     },
     onresize () {
       try {
@@ -124,8 +184,8 @@ export default {
         console.warn('Rezise', e)
       }
     },
-    on_button_click (e) {
-      console.log('event', e)
+    startstop (e) {
+      console.log('Event', e)
       this.stop = !this.stop
     }
   },

@@ -1,5 +1,5 @@
 import { Overlay } from 'trading-vue-js'
-import { Line, zigzag } from 'src/helpers/Utils'
+import { Line } from 'src/helpers/Utils'
 
 export default {
   name: 'Maximum',
@@ -38,24 +38,20 @@ export default {
     },
     draw (ctx) {
       // console.log(this.$props)
-      const data = this.$props.data || []
-      if (data.length < 1) return
-      const last = data[data.length - 1]
-      // console.log(last)
-      const time = last[1]
-      const { max, min } = last[2]
+      const [time, , , zigzag] = (this.$props.data || [])[0] || []
+      // console.log(time, max, min)
+      if (!time) return
 
-      const points = zigzag(max, min)
-      let len = points.length
-      // console.log(len, points)
+      let len = zigzag.length
+      // console.log(len, zigzag)
       while (--len > 0) {
-        const p0 = points[len - 1]
-        const p1 = points[len]
+        const p0 = zigzag[len - 1]
+        const p1 = zigzag[len]
         ctx.setLineDash([])
         if (p0.type === 'M') ctx.strokeStyle = 'sienna'
         else ctx.strokeStyle = 'chocolate'
         this.line(ctx, p0, p1)
-        const p2 = points[len + 1]
+        const p2 = zigzag[len + 1]
         if (p2 && p2.next) { // if second exists and it isn't the last candle (= current)
           const price = Line(p0.time, p0.price, p2.time, p2.price)(time)
           const pt = { time, price }
@@ -65,21 +61,6 @@ export default {
           this.line(ctx, p0, pt)
         }
       }
-
-      ctx.lineWidth = 1
-      ctx.strokeStyle = 'orange'
-      const hi = this.$props.layout.$_hi
-      const lo = this.$props.layout.$_lo
-
-      ctx.setLineDash([1, 5])
-      const onesecondago = time - 1000
-      this.line(ctx, { time: onesecondago, price: hi }, { time: onesecondago, price: lo })
-      ctx.setLineDash([5, 15])
-      const oneminuteago = time - 6e4
-      this.line(ctx, { time: oneminuteago, price: hi }, { time: oneminuteago, price: lo })
-      ctx.setLineDash([20, 30])
-      const fiveminuteago = time - 3e5
-      this.line(ctx, { time: fiveminuteago, price: hi }, { time: fiveminuteago, price: lo })
     },
     use_for () { return ['MAXIMUM'] }
   }

@@ -12,13 +12,43 @@ export default class Queue {
     return this.head
   }
 
+  remove () {
+    const v = this.buff[this.tail]
+    this.tail = (this.tail + 1) % this.size
+    return v
+  }
+
   shift () {
-    if (this.tail === this.head) {
+    if (this.isEmpty) {
       return undefined
     } else {
-      const v = this.buff[this.tail]
-      this.tail = (this.tail + 1) % this.size
-      return v
+      return this.remove()
     }
+  }
+
+  get isFull () {
+    return (this.head + 1) % this.size === this.tail
+  }
+
+  get isEmpty () {
+    return this.head === this.tail
+  }
+
+  rotate (v) {
+    if (this.isFull) {
+      const old = this.remove()
+      this.push(v)
+      return old
+    } else {
+      this.push(v)
+      return undefined
+    }
+  }
+}
+
+export class QueueZ extends Queue {
+  constructor (size, obj = 0) {
+    super(size)
+    this.buff = this.buff.map(e => obj)
   }
 }

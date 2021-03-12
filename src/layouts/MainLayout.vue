@@ -15,6 +15,7 @@
           Cryptocoins Monitoring
         </q-toolbar-title>
 
+        <q-toggle v-model="darkmode" label="DM" @input="chgmode" color="black" class="q-mr-lg"/>
         <q-btn color="orange" icon="stop" round dense size="xs" outline @click="stop()"/>
       </q-toolbar>
     </q-header>
@@ -43,6 +44,7 @@ export default {
   components: { mainmenu },
   data () {
     return {
+      darkmode: true,
       leftDrawerOpen: false,
       streamid: []
     }
@@ -54,15 +56,19 @@ export default {
   methods: {
     stop () {
       disconnect()
+    },
+    chgmode (val) {
+      this.$q.dark.set(this.darkmode)
     }
   },
   async mounted () {
     await connect()
-    console.log('connected at mainlauyoout')
+    console.log('connected on mainLauyout')
     this.streamid = listen((data) => {
       const wanted = data.filter(t => this.watchSet.has(t.s))
       enqueueTickers(wanted)
     }, '!miniTicker@arr')
+    this.$q.dark.set(this.darkmode)
   },
   beforeDestroy () {
     dismiss(...this.streamid)
