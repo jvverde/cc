@@ -5,7 +5,7 @@
           ref="tradingVue"
           :title-txt="symbol"
           :overlays="overlays"
-          :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 60}"
+          :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 10}"
           :legend-buttons="['MAXIMUM', 'settings', 'remove']"
           @legend-button-click="startstop"
           :color-back="colors.colorBack"
@@ -25,13 +25,13 @@ import Maximum from 'src/charts/Maximum'
 import { updateMax, updateMin } from 'src/helpers/MaxMin'
 import { CandleOf } from 'src/helpers/Candle'
 import { zigzag } from 'src/helpers/Utils'
-import { QueueZ } from 'src/helpers/Queue'
+import MA from 'src/helpers/MovingAverage'
 
 const data = {
   chart: {
     type: 'Candles',
     indexBased: false,
-    tf: 1000,
+    tf: '1s',
     data: []
   },
   onchart: [
@@ -52,43 +52,37 @@ const data = {
       }
     },
     {
-      name: 'Realtime',
+      name: 'MovingAverages',
       type: 'Splines',
       data: [],
       settings: {
         legend: false,
         'z-index': 5,
-        colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed']
+        colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed', 'salmon']
+      }
+    },
+    {
+      name: 'Average',
+      type: 'Spline',
+      data: [],
+      settings: {
+        legend: false,
+        'z-index': 5,
+        color: 'yellow'
       }
     }
   ]
 }
 const settings = { auto_scroll: true }
 
-class MA {
-  constructor (size) {
-    this.queue = new QueueZ(size)
-    this.sumprod = 0
-    this.quantity = 0
-  }
+const averages = [12, 30, 99, 300, 1000]
 
-  update (price, quote) {
-    this.sumprod += price * quote
-    this.quantity += quote
-    const old = this.queue.rotate({ price, quote })
-    if (old) {
-      this.sumprod -= old.price * old.quote
-      this.quantity -= old.quote
-    }
-    return this.sumprod / this.quantity
-  }
-}
-const averages = [5, 25, 100, 500]
 export default {
   name: 'coin',
   data () {
     return {
       mas: averages.map(v => new MA(v)),
+      amas: [],
       stop: false,
       candle: undefined,
       max: { time: -Infinity, price: -Infinity },
@@ -104,11 +98,6 @@ export default {
       dc: new DataCube(data, settings),
       width: 800,
       height: 600,
-      colors: {
-        colorBack: '#fff',
-        colorGrid: '#eee',
-        colorText: '#333'
-      },
       overlays: [Maximum]
     }
   },
@@ -116,12 +105,23 @@ export default {
     TradingVue
   },
   computed: {
-    stream () { return this.symbol.toLowerCase() + '@aggTrade' }
+    stream () { return this.symbol.toLowerCase() + '@aggTrade' },
+    colors () {
+      return this.night ? {} : {
+        colorBack: '#fff',
+        colorGrid: '#eee',
+        colorText: '#333'
+      }
+    }
   },
   props: {
     symbol: {
       type: String,
       required: true
+    },
+    night: {
+      type: Boolean,
+      default: true
     }
   },
   watch: {
@@ -134,6 +134,7 @@ export default {
     },
     symbol () {
       this.dc = new DataCube(data, settings)
+      this.$refs.tradingVue.resetChart()
     }
   },
   methods: {
@@ -142,20 +143,30 @@ export default {
       const price = Number(t.p)
       const quote = Number(t.q)
       this.candle.insert(time, price, quote)
-      // console.log(old, this.sa20 / this.da20)
       const mas = this.mas.map(m => m.update(price, quote))
-      this.dc.merge('onchart.Realtime.data', [[
-        time,
-        // price,
-        ...mas
-      ]])
+      this.amas.push([time, ...mas])
+      // console.log(t.T, time, mas[0])
+      // this.dc.merge('onchart.MovingAverages.data', [[time, ...mas]])
       // this.dc.update({
-      //   Realtime: price
+      //   MovingAverages: [...mas]
       // })
     },
-    oncandle ({ o, h, l, c, v, t, T }) {
+    oncandle ({ o, h, l, c, v, t, T, m }) {
       const time = (t + T) / 2
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
+      this.dc.merge('onchart.Average.data', [[time, m]])
+      const amas = this.amas.sort((a, b) => {
+        if (a[0] < b[0]) return -1
+        if (a[0] > b[0]) return 1
+        return 0
+      }).reduce((acc, a) => {
+        if (acc.length === 0 || acc[acc.length - 1][0] !== a[0]) {
+          acc.push(a)
+        }
+        return acc
+      }, [])
+      this.dc.merge('onchart.MovingAverages.data', amas)
+      this.amas.length = []
       const [x1, x2] = this.$refs.tradingVue.getRange()
       if (x2 < T + 100) {
         const diff = T + 100 - x2
@@ -166,7 +177,6 @@ export default {
       this.min = updateMin({ time, price: l, min }, 30 * 24 * 3600e3)
 
       const points = zigzag(max, min)
-
       this.dc.set('onchart.Maximum.data', [[T, max, min, points]])
       const now = Date.now()
       this.dc.set('onchart.Split.data', [
@@ -190,6 +200,7 @@ export default {
     }
   },
   mounted () {
+    this.$refs.tradingVue.resetChart()
     window.addEventListener('resize', this.onresize)
     console.log('sett', this.dc.sett)
     this.dc.onrange(e => console.log('onrange', e))

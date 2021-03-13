@@ -6,17 +6,20 @@ export class Candle {
     this.c = undefined
     this.v = v
     this.current = o
+    this.sumprod = v * o
   }
 
-  add (price, volume) {
+  update (price, volume) {
     if (this.l > price) this.l = price
     if (this.h < price) this.h = price
     this.current = price
     this.v += volume
+    this.sumprod += price * volume
   }
 
   close (p, v) {
     this.c = this.current
+    this.m = this.sumprod / this.v
   }
 
   get val () {
@@ -41,14 +44,14 @@ export class CandleOf extends Candle {
       super.open(price, volume)
     } else if (period > this.lastperiod) {
       super.close()
-      const { o, h, l, c, v } = this
+      const { o, h, l, c, v, m } = this
       const T = (this.lastperiod + 1) * this.interval // close time
       const t = this.lastperiod * this.interval // open time
-      this.onclose({ o, h, l, c, v, time, t, T })
+      this.onclose({ o, h, l, c, v, time, t, T, m })
       super.open(price, volume)
       this.lastperiod = period
     } else {
-      super.add(price, volume)
+      super.update(price, volume)
     }
   }
 }
