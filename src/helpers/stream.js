@@ -29,11 +29,19 @@ const handlersbyid = {}
 function dispatcher (answer) {
   if (answer && answer.stream && answer.stream in handlersbystream) {
     handlersbystream[answer.stream].forEach(e => {
-      e.handler(answer.data)
+      try {
+        e.handler(answer.data)
+      } catch (err) {
+        console.error('Error while call handler', err)
+      }
     })
   } else if (answer && answer.id && answer.id in handlersbyid) {
-    handlersbyid[answer.id](answer.result)
-    delete handlersbyid[answer.id]
+    try {
+      handlersbyid[answer.id](answer.result)
+      delete handlersbyid[answer.id]
+    } catch (err) {
+      console.error('Error while call handler for answer', answer, err)
+    }
   } else {
     console.warn('Unexpected data', answer)
   }
@@ -146,13 +154,13 @@ export async function unsubscribe (...names) {
 }
 
 export async function listen (handler, ...streams) {
-  const ids = streams.map(s => install(s, handler))
+  const ids = streams.flat(Infinity).map(s => install(s, handler))
   await subscribe(...streams)
   return ids
 }
 
 export function dismiss (...ids) {
-  const streams = ids.map(id => uninstall(id)).filter(s => s)
+  const streams = ids.flat(Infinity).map(id => uninstall(id)).filter(s => s)
   return unsubscribe(...streams)
 }
 // }
