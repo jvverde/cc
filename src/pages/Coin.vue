@@ -67,6 +67,26 @@ const data = () => {
           'z-index': 5,
           color: 'yellow'
         }
+      },
+      {
+        name: 'CostBuy',
+        type: 'Segment',
+        data: [],
+        settings: {
+          legend: false,
+          'z-index': 10,
+          color: 'lime'
+        }
+      },
+      {
+        name: 'CostSell',
+        type: 'Segment',
+        data: [],
+        settings: {
+          legend: false,
+          'z-index': 10,
+          color: 'Coral'
+        }
       }
     ],
     offchart: [
@@ -149,8 +169,21 @@ export default {
         [now - 36e5, '1h ago', 0, '#CCFFCC']
       ])
 
-      histogram.ups.forEach(e => console.log('ups', e.i, ' => ', e.v))
-      histogram.downs.forEach(e => console.log('downs', e.i, ' => ', e.v))
+      const b = m * 1.00075
+      const s = m * 0.99925
+
+      this.dc.merge('onchart.CostBuy.settings', {
+        p1: [now - 60e3, b],
+        p2: [now + 1e3, b]
+      })
+
+      this.dc.merge('onchart.CostSell.settings', {
+        p1: [now - 60e3, s],
+        p2: [now + 1e3, s]
+      })
+
+      // histogram.ups.forEach(e => console.log('ups', e.i, ' => ', e.v))
+      // histogram.downs.forEach(e => console.log('downs', e.i, ' => ', e.v))
       /*
       const [, , , , m300, mlimit] = mas
 

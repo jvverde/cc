@@ -125,3 +125,10 @@ export function removeTrades (symbol) {
     delete cointrades[symbol]
   }
 }
+
+export function listSubcribed () {
+  return Object.Keys(cointrades).sort()
+}
+export function isSubcribed (symbol) {
+  return symbol in cointrades
+}

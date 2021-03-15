@@ -46,6 +46,12 @@
           <row :symbol="symbol" :cb="cb(index)" :col="col"/>
         </q-item-section>
         <q-item-section side>
+          <q-btn v-if="isSubcribed(index)" icon="electrical_services" color="green" outline dense size="xs" round
+            @click.prevent="unsubscribe(index)"/>
+          <q-btn v-else icon="electrical_services" color="red" outline dense size="xs" round
+            @click.prevent="subscribe(index)"/>
+        </q-item-section>
+        <q-item-section side>
           <q-btn icon="close" color="negative" flat dense size="xs" round @click="removeAtIndex(index)"/>
         </q-item-section>
       </q-item>
@@ -59,6 +65,8 @@
 import { mapState, mapActions, mapMutations } from 'vuex'
 import row from 'src/components/Row'
 import rowheader from 'src/components/RowHeader'
+import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/CoinTrades'
+import { loadAggTrades } from 'src/helpers/BinanceApi'
 
 export default {
   name: 'Monitor',
@@ -68,6 +76,7 @@ export default {
       n: 0,
       filter: '',
       follow: [],
+      subscribed: [],
       ordermap: [],
       orderby: [],
       coins: ['BTC', 'USDT', 'ETH', 'BNB', 'USDC', 'BUSD', 'TUSD', 'PAX', 'RUB',
@@ -90,6 +99,9 @@ export default {
     options () {
       const symbols = this.pairs.map(p => p.symbol).filter(s => this.RE.test(s))
       return symbols.filter(a => a.toLowerCase().includes(this.filter.toLowerCase()))
+    },
+    isSubcribed () {
+      return index => this.subscribed.findIndex(e => e.index === index) >= 0
     },
     ...mapState('binance', ['pairs', 'watching'])
   },
@@ -139,6 +151,16 @@ export default {
     },
     removeAtIndex (index) {
       this.follow.splice(index, 1)
+    },
+    unsubscribe (index) {
+      if (isSubcribed(this.follow[index])) removeTrades(this.follow[index])
+      const i = this.subscribed.findIndex(e => e.index === index)
+      if (i >= 0) this.subscribed.splice(i, 1)
+    },
+    async subscribe (index) {
+      // this.subscribed.push({ index, coin: subcribeTrades(this.follow[index]) })
+      const r = await loadAggTrades(this.follow[index])
+      if (subcribeTrades) console.log(r)
     },
     ...mapMutations('binance', ['watch', 'forget']),
     ...mapActions('binance', ['loadPairs'])
