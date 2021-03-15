@@ -8,6 +8,44 @@ const AVERAGES = [30, 100, 300, 3e5]
 
 const ONEMONTH = 30 * 24 * 3600e3
 
+class UpDownHist {
+  constructor () {
+    this.HUP = []
+    this.HDO = []
+    this.up = 1
+    this.down = 0
+    this.last = 0
+  }
+
+  incHUP (i) {
+    this.HUP[i] = 1 + (this.HUP[i] || 0)
+  }
+
+  incHDO (i) {
+    this.HDO[i] = 1 + (this.HDO[i] || 0)
+  }
+
+  cnt (v) {
+    if (v > this.last) {
+      if (this.down) this.incHDO(this.down)
+      this.down = 0
+      this.up++
+    } else if (v < this.last) {
+      if (this.up) this.incHUP(this.up)
+      this.up = 0
+      this.down++
+    } else {
+      if (this.down) this.HDO[this.down]++
+      if (this.up) this.HUP[this.up]++
+      this.up = this.down = 0
+    }
+    this.last = v
+  }
+
+  get ups () { return this.HUP.map((v, i) => v >= 0 ? { v, i } : undefined).filter(e => e) }
+  get downs () { return this.HDO.map((v, i) => ({ v, i })).filter(e => e) }
+}
+
 export default class CoinTrade {
   constructor (symbol, { delta = 1000, maverages = AVERAGES, since = ONEMONTH } = {}) {
     const stream = symbol.toLowerCase() + '@aggTrade'
@@ -20,6 +58,7 @@ export default class CoinTrade {
     this.mas = maverages.map(v => new MA(v))
     this.max = { time: -Infinity, price: -Infinity }
     this.min = { time: -Infinity, price: Infinity }
+    this.histogram = new UpDownHist()
   }
 
   tradeEvent (t) {
@@ -38,7 +77,8 @@ export default class CoinTrade {
     this.min = min = updateMin({ time, price: c.l, min }, this.since)
     this.zigzag = zigzag(max, min)
     const mas = this.mas
-    this.oncandle.map(e => e.handler).forEach(h => h({ ...c, time, mas, max, min, zigzag: this.zigzag }))
+    this.histogram.cnt(c.m)
+    this.oncandle.map(e => e.handler).forEach(h => h({ ...c, time, mas, max, min, zigzag: this.zigzag, histogram: this.histogram }))
   }
 
   registerTradeConsumer (handler) {

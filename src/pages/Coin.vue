@@ -129,7 +129,7 @@ export default {
     }
   },
   methods: {
-    oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, mas }) {
+    oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, mas, histogram }) {
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
       this.dc.merge('onchart.Average.data', [[time, m]])
       this.dc.merge('onchart.MovingAverages.data', [[time, ...mas.map(m => m.value)]])
@@ -149,6 +149,8 @@ export default {
         [now - 36e5, '1h ago', 0, '#CCFFCC']
       ])
 
+      histogram.ups.forEach(e => console.log('ups', e.i, ' => ', e.v))
+      histogram.downs.forEach(e => console.log('downs', e.i, ' => ', e.v))
       /*
       const [, , , , m300, mlimit] = mas
 
