@@ -79,7 +79,8 @@ const ONEMONTH = 30 * 24 * 3600e3
 
 export class CandleOfTrades extends CandleEvery {
   constructor (symbol, handler = () => null, { interval = 1000, since = ONEMONTH } = {}) {
-    super(interval, (c) => this.candleEvent(c))
+    super(interval)
+    super.onclose = this.candleEvent
     this.oncandle = [handler]
     this.zigzag = []
     this.since = since

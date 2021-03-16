@@ -54,16 +54,21 @@ export function loadAggTradesFromId (symbol, {
   })
 }
 
-export async function loadAggTradesLastMinutes (symbol, minutes) {
+export async function loadAggTradesLastMinutes (symbol, {
+  minutes = 30,
+  handler = () => true
+} = {}) {
   const limit = 1000
   const endTime = Date.now() - (minutes - 1) * 60e3
   const startTime = endTime - 60e3
   let result = await loadAggTradesBetween(symbol, { endTime, startTime, limit })
   if (result.length === 0) return result
   let r = result
+  handler(r)
   do {
     const fromId = 1 + r[r.length - 1].a
     r = await loadAggTradesFromId(symbol, { fromId })
+    handler(r)
     result = result.concat(r)
   } while (r.length === limit)
   return result

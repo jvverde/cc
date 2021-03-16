@@ -55,7 +55,7 @@ const data = () => {
         settings: {
           legend: false,
           'z-index': 5,
-          colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed', 'salmon']
+          colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed', 'salmon', 'DarkSalmon', 'LightSalmon']
         }
       },
       {
@@ -152,7 +152,7 @@ export default {
     oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, mas, histogram }) {
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
       this.dc.merge('onchart.Average.data', [[time, m]])
-      this.dc.merge('onchart.MovingAverages.data', [[time, ...mas.map(m => m.value)]])
+      this.dc.merge('onchart.MovingAverages.data', [[time, ...mas]])
       this.dc.set('onchart.Maximum.data', [[T, max, min, zigzag]])
 
       const [x1, x2] = this.$refs.tradingVue.getRange()

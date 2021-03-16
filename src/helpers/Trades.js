@@ -1,18 +1,36 @@
 import { listen, dismiss } from './stream'
+import { loadAggTradesLastMinutes } from './BinanceApi'
+
 import MA from './MovingAverage'
 
-const AVERAGES = [30, 100, 300, 3e5]
+const AVERAGES = [30, 100, 300, 1e3, 1e4, 1e5, 1e6]
 
 export default class Trades {
-  constructor (symbol, { maverages = AVERAGES } = {}) {
-    const stream = symbol.toLowerCase() + '@aggTrade'
-    this.streamid = listen((t) => { this.tradeEvent(t) }, stream) // we need the arrow function to preserve the this on tradeEvent
+  constructor (symbol, { maverages = AVERAGES, minago = 180 } = {}) {
     this.ontrade = []
     this.mas = maverages.map(v => new MA(v))
+    this.streamid = this._init(symbol, minago)
+  }
+
+  _inserttrades (trades) { // insert a burst of trades
+    for (const t of trades) {
+      this.tradeEvent(t)
+    }
+  }
+
+  async _init (symbol, minutes) {
+    // First load some past trades
+    await loadAggTradesLastMinutes(symbol, {
+      minutes,
+      handler: (trades) => this._inserttrades(trades) // process partial results in batch
+    })
+    // Now start receiving it in real time through the stream API
+    const stream = symbol.toLowerCase() + '@aggTrade'
+    return listen((t) => { this.tradeEvent(t) }, stream) // we need the arrow function to preserve the 'this' on tradeEvent
   }
 
   tradeEvent (t) {
-    const time = t.E
+    const time = t.T
     const price = Number(t.p)
     const quantity = Number(t.q)
     const mas = this.mas.map(m => m.update(price, quantity))
