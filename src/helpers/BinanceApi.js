@@ -55,23 +55,17 @@ export function loadAggTradesFromId (symbol, {
 }
 
 export async function loadAggTradesLastMinutes (symbol, minutes) {
+  const limit = 1000
   const endTime = Date.now() - (minutes - 1) * 60e3
   const startTime = endTime - 60e3
-  let result = await loadAggTradesBetween(symbol, { endTime, startTime })
-  let len = result.length
-  let { a: lastID, T: time } = (result[len - 1] || {})
-  console.log(lastID, new Date(time))
-  while (lastID && time) {
+  let result = await loadAggTradesBetween(symbol, { endTime, startTime, limit })
+  if (result.length === 0) return result
+  let r = result
+  do {
+    const lastID = r[r.length - 1].a
     const fromId = lastID + 1
-    const r = await loadAggTradesFromId(symbol, { fromId })
-    if (!r || !(r.length > 0)) break
+    r = await loadAggTradesFromId(symbol, { fromId })
     result = result.concat(r)
-    len = r.length
-    const last = r[len - 1]
-    lastID = last.a
-    time = last.T
-    console.log(lastID, len, new Date(time))
-    if (len < 1000) break
-  }
+  } while (r.length === limit)
   return result
 }
