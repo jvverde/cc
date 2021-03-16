@@ -66,7 +66,7 @@ import { mapState, mapActions, mapMutations } from 'vuex'
 import row from 'src/components/Row'
 import rowheader from 'src/components/RowHeader'
 import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/CoinTrades'
-import { loadAggTrades } from 'src/helpers/BinanceApi'
+import { loadAggTradesLastMinutes } from 'src/helpers/BinanceApi'
 
 export default {
   name: 'Monitor',
@@ -159,7 +159,7 @@ export default {
     },
     async subscribe (index) {
       // this.subscribed.push({ index, coin: subcribeTrades(this.follow[index]) })
-      const r = await loadAggTrades(this.follow[index])
+      const r = await loadAggTradesLastMinutes(this.follow[index], 120)
       if (subcribeTrades) console.log(r)
     },
     ...mapMutations('binance', ['watch', 'forget']),
