@@ -62,8 +62,7 @@ export async function loadAggTradesLastMinutes (symbol, minutes) {
   if (result.length === 0) return result
   let r = result
   do {
-    const lastID = r[r.length - 1].a
-    const fromId = lastID + 1
+    const fromId = 1 + r[r.length - 1].a
     r = await loadAggTradesFromId(symbol, { fromId })
     result = result.concat(r)
   } while (r.length === limit)

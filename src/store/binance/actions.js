@@ -1,15 +1,12 @@
-import axios from 'axios'
-import { apiv3 } from 'src/config'
-
-// axios.defaults.headers['Access-Control-Allow-Origin'] = '*'
+import { allTicker24h } from 'src/helpers/BinanceApi'
 
 export function loadPairs ({ commit }) {
   return new Promise((resolve, reject) => {
-    axios.get(`${apiv3}/ticker/24hr`)
+    allTicker24h()
       .then(answer => {
         commit('resetPairs')
-        commit('addPairs', answer.data)
-        resolve(answer.data)
+        commit('addPairs', answer)
+        resolve(answer)
       })
       .catch(err => {
         console.warn('Error on get api', err)

@@ -21,7 +21,7 @@
 <script>
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
-import { subcribeTrades } from 'src/helpers/CoinTrades'
+import { CandleOfTrades } from 'src/helpers/Candle'
 
 const data = () => {
   return {
@@ -110,7 +110,7 @@ export default {
   name: 'coin',
   data () {
     return {
-      coin: undefined,
+      candle: undefined,
       stop: false,
       dc: new DataCube(data(), settings),
       width: 800,
@@ -242,15 +242,14 @@ export default {
   },
   mounted () {
     console.log('Mount', this.symbol)
-    this.coin = subcribeTrades(this.symbol)
-    this.handlerid = this.coin.registerCandleConsumer(this.oncandle)
+    this.candle = new CandleOfTrades(this.symbol, (c) => this.oncandle(c))
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
     window.addEventListener('resize', this.onresize)
   },
   beforeDestroy () {
     console.log('destroy...')
-    this.coin.removeCandleConsumer(this.handlerid)
+    this.candle.dismiss()
     window.removeEventListener('resize', this.onresize)
   }
 }

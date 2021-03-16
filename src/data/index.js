@@ -1,6 +1,6 @@
 import Ticker from 'src/helpers/Ticker'
 
-const localStorageName = 'ccmonStorage.json'
+// const localStorageName = 'ccmonStorage.json'
 
 const store = {
   tickers: {},
@@ -50,6 +50,7 @@ export function unlistenTicker (symbol, cb) {
   }
 }
 
+/*
 if (localStorage) {
   try {
     const { tickers, size } = JSON.parse(localStorage.getItem(localStorageName)) || {}
@@ -74,3 +75,4 @@ if (localStorage && window && window.addEventListener) {
     localStorage.setItem(localStorageName, JSON.stringify(store))
   })
 }
+*/

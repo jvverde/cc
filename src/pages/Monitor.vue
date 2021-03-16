@@ -65,7 +65,7 @@
 import { mapState, mapActions, mapMutations } from 'vuex'
 import row from 'src/components/Row'
 import rowheader from 'src/components/RowHeader'
-import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/CoinTrades'
+import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/Trades'
 import { loadAggTradesLastMinutes } from 'src/helpers/BinanceApi'
 
 export default {
