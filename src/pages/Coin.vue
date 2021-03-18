@@ -24,7 +24,7 @@
 <script>
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
-import { dataOf } from 'src/charts/data'
+import data from 'src/charts/data'
 import { subcribeEnqueueCandles } from 'src/helpers/Candle'
 
 const settings = { auto_scroll: true }
@@ -35,7 +35,7 @@ export default {
     return {
       candle: undefined,
       stop: false,
-      dc: new DataCube(dataOf(this.$props.symbol), settings),
+      dc: new DataCube(data(), settings),
       width: 800,
       height: 600,
       overlays: [Maximum]
@@ -162,12 +162,17 @@ export default {
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
     window.addEventListener('resize', this.onresize)
-    const { candle } = subcribeEnqueueCandles(this.symbol)
-    candle.addHandler(c => this.oncandle(c))
+    const { queue, candle } = subcribeEnqueueCandles(this.symbol)
+    for (const c of queue) {
+      this.oncandle(c)
+    }
+    this.candle = candle
+    this.handlerid = candle.addHandler(c => this.oncandle(c))
   },
   beforeDestroy () {
     console.log('destroy...')
     window.removeEventListener('resize', this.onresize)
+    this.candle.delHandler(this.handlerid)
   }
 }
 </script>
