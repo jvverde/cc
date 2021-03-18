@@ -25,6 +25,7 @@
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import { dataOf } from 'src/charts/data'
+import { subcribeEnqueueCandles } from 'src/helpers/Candle'
 
 const settings = { auto_scroll: true }
 
@@ -161,6 +162,8 @@ export default {
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
     window.addEventListener('resize', this.onresize)
+    const { candle } = subcribeEnqueueCandles(this.symbol)
+    candle.addHandler(c => this.oncandle(c))
   },
   beforeDestroy () {
     console.log('destroy...')

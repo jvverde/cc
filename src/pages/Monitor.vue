@@ -46,7 +46,7 @@
           <row :symbol="symbol" :cb="cb(index)" :col="col"/>
         </q-item-section>
         <q-item-section side>
-          <q-btn v-if="isSubcribed(index)" icon="electrical_services" color="green" outline dense size="xs" round
+          <q-btn v-if="isSubcribed(symbol)" icon="electrical_services" color="green" outline dense size="xs" round
             @click.prevent="unsubscribe(index)"/>
           <q-btn v-else icon="electrical_services" color="red" outline dense size="xs" round
             @click.prevent="subscribe(index)"/>
@@ -67,8 +67,7 @@ import row from 'src/components/Row'
 import rowheader from 'src/components/RowHeader'
 // import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/Trades'
 // import { loadAggTradesLastMinutes } from 'src/helpers/BinanceApi'
-import { CandleOfTrades } from 'src/helpers/Candle'
-import { dataOf } from 'src/charts/data'
+import { subcribeEnqueueCandles, unsubcribeEnqueueCandles } from 'src/helpers/Candle'
 
 export default {
   name: 'Monitor',
@@ -78,7 +77,7 @@ export default {
       n: 0,
       filter: '',
       follow: [],
-      subscribed: [],
+      subscribed: {},
       ordermap: [],
       orderby: [],
       coins: ['BTC', 'USDT', 'ETH', 'BNB', 'USDC', 'BUSD', 'TUSD', 'PAX', 'RUB',
@@ -103,7 +102,7 @@ export default {
       return symbols.filter(a => a.toLowerCase().includes(this.filter.toLowerCase()))
     },
     isSubcribed () {
-      return index => this.subscribed.findIndex(e => e.index === index) >= 0
+      return symbol => symbol in this.subscribed
     },
     ...mapState('binance', ['pairs', 'watching'])
   },
@@ -155,17 +154,14 @@ export default {
       this.follow.splice(index, 1)
     },
     unsubscribe (index) {
-      if (this.subscribed[index]) this.subscribed[index].dismiss()
-      this.subscribed[index] = undefined
-    },
-    onclandle (symbol, { time, o, h, l, c, v }) {
-      const data = dataOf(symbol)
-      data.chart.data.push([time, o, h, l, c, v])
-    },
-    async subscribe (index) {
       const symbol = this.order[index]
-      const candle = new CandleOfTrades(symbol, (c) => this.onclandle(symbol, c))
-      this.subscribed[index] = candle
+      if (this.subscribed[symbol]) unsubcribeEnqueueCandles(symbol)
+      this.subscribed[symbol] = undefined
+    },
+    subscribe (index) {
+      const symbol = this.order[index]
+      const { queue, candle } = subcribeEnqueueCandles(symbol)
+      this.subscribed[symbol] = { queue, candle }
     },
     ...mapMutations('binance', ['watch', 'forget']),
     ...mapActions('binance', ['loadPairs'])

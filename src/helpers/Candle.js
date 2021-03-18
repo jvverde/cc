@@ -2,6 +2,7 @@ import { subcribeTrades } from 'src/helpers/Trades'
 import { updateMax, updateMin } from './MaxMin'
 import { zigzag } from './Utils'
 import Histogram from './Histogram'
+import Queue from './Queue'
 
 export class Candle {
   open (o = 0, q = 0) {
@@ -102,7 +103,38 @@ export class CandleOfTrades extends CandleEvery {
     this.oncandle.forEach(h => h({ ...c, time, max, min, zigzag: this.zigzag, histogram: this.histogram }))
   }
 
+  addHandler (h) {
+    this.oncandle.push(h)
+  }
+
   dismiss () {
     this.producer.removeConsumer(this.consumerId)
   }
+}
+
+const _candles = {}
+
+const _queue = {}
+
+export function subcribeEnqueueCandles (symbol, options = {}) {
+  if (!_queue[symbol]) {
+    _queue[symbol] = new Queue(options.size || 24 * 3600)
+  }
+
+  const queue = _queue[symbol]
+
+  if (!_candles[symbol]) {
+    const handler = c => queue.push(c)
+    _candles[symbol] = new CandleOfTrades(symbol, handler, options)
+  }
+
+  const candle = _candles[symbol]
+
+  return { queue, candle }
+}
+
+export function unsubcribeEnqueueCandles (symbol, options = {}) {
+  _candles[symbol].dismiss()
+  delete _candles[symbol]
+  delete _queue[symbol]
 }
