@@ -6,15 +6,24 @@ export default class Queue {
     this.size = size
   }
 
+  _inc (index) { return (index + 1) % this.size }
+
+  _incHead () { return (this.head = this._inc(this.head)) }
+
+  _incTail () { return (this.tail = this._inc(this.tail)) }
+
   push (v) {
+    if (this.isFull) this._incTail() // If it is full push tail one position
     this.buff[this.head] = v
-    this.head = (this.head + 1) % this.size
+    // this.head = (this.head + 1) % this.size
+    this._incHead()
     return this.head
   }
 
-  remove () {
+  _remove () {
     const v = this.buff[this.tail]
-    this.tail = (this.tail + 1) % this.size
+    // this.tail = (this.tail + 1) % this.size
+    this._incTail()
     return v
   }
 
@@ -22,7 +31,7 @@ export default class Queue {
     if (this.isEmpty) {
       return undefined
     } else {
-      return this.remove()
+      return this._remove()
     }
   }
 
@@ -36,12 +45,28 @@ export default class Queue {
 
   rotate (v) {
     if (this.isFull) {
-      const old = this.remove()
+      const old = this._remove()
       this.push(v)
       return old
     } else {
       this.push(v)
       return undefined
+    }
+  }
+
+  [Symbol.iterator] () {
+    let index = this.tail
+    const done = true
+    return {
+      next: () => {
+        if (index !== this.head) {
+          const value = this.buff[index]
+          index = (1 + index) % this.size
+          return { value }
+        } else {
+          return { done }
+        }
+      }
     }
   }
 }

@@ -1,11 +1,14 @@
 <template>
   <q-page class="fit row content-stretch">
     <div class="full-width q-my-md" ref="coinpage">
-      <trading-vue :data="dc" :width="width" :height="height"
+      <trading-vue
           ref="tradingVue"
+          :data="dc"
+          :width="width"
+          :height="height"
           :title-txt="symbol"
           :overlays="overlays"
-          :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 10}"
+          :chart-config="{'MAX_ZOOM': 3000, 'MIN_ZOOM': 50}"
           :legend-buttons="['settings', 'remove']"
           @legend-button-click="startstop"
           :color-back="colors.colorBack"
@@ -21,88 +24,7 @@
 <script>
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
-import { CandleOfTrades } from 'src/helpers/Candle'
-
-const data = () => {
-  return {
-    chart: {
-      type: 'Candles',
-      indexBased: false,
-      tf: '1s',
-      data: []
-    },
-    onchart: [
-      {
-        name: 'Maximum',
-        type: 'MAXIMUM',
-        data: [],
-        settings: {
-          'z-index': 5
-        }
-      },
-      {
-        name: 'Split',
-        type: 'Splitters',
-        data: [],
-        settings: {
-          legend: false
-        }
-      },
-      {
-        name: 'MovingAverages',
-        type: 'Splines',
-        data: [],
-        settings: {
-          legend: false,
-          'z-index': 5,
-          colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed', 'salmon', 'DarkSalmon', 'LightSalmon']
-        }
-      },
-      {
-        name: 'Average',
-        type: 'Spline',
-        data: [],
-        settings: {
-          legend: false,
-          'z-index': 5,
-          color: 'yellow'
-        }
-      },
-      {
-        name: 'CostBuy',
-        type: 'Segment',
-        data: [],
-        settings: {
-          legend: false,
-          'z-index': 10,
-          color: 'lime'
-        }
-      },
-      {
-        name: 'CostSell',
-        type: 'Segment',
-        data: [],
-        settings: {
-          legend: false,
-          'z-index': 10,
-          color: 'Coral'
-        }
-      }
-    ],
-    offchart: [
-      {
-        name: 'Funds',
-        type: 'Spline',
-        data: [],
-        settings: {
-          legend: false,
-          'z-index': 5,
-          color: 'purple'
-        }
-      }
-    ]
-  }
-}
+import { dataOf } from 'src/charts/data'
 
 const settings = { auto_scroll: true }
 
@@ -112,7 +34,7 @@ export default {
     return {
       candle: undefined,
       stop: false,
-      dc: new DataCube(data(), settings),
+      dc: new DataCube(dataOf(this.$props.symbol), settings),
       width: 800,
       height: 600,
       overlays: [Maximum]
@@ -140,12 +62,6 @@ export default {
     night: {
       type: Boolean,
       default: true
-    }
-  },
-  watch: {
-    symbol () {
-      this.dc = new DataCube(data, settings)
-      this.$refs.tradingVue.resetChart()
     }
   },
   methods: {
@@ -241,15 +157,13 @@ export default {
     }
   },
   mounted () {
-    console.log('Mount', this.symbol)
-    this.candle = new CandleOfTrades(this.symbol, (c) => this.oncandle(c))
+    console.log('Mount', this.$props.symbol)
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
     window.addEventListener('resize', this.onresize)
   },
   beforeDestroy () {
     console.log('destroy...')
-    this.candle.dismiss()
     window.removeEventListener('resize', this.onresize)
   }
 }

@@ -65,8 +65,10 @@
 import { mapState, mapActions, mapMutations } from 'vuex'
 import row from 'src/components/Row'
 import rowheader from 'src/components/RowHeader'
-import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/Trades'
-import { loadAggTradesLastMinutes } from 'src/helpers/BinanceApi'
+// import { subcribeTrades, removeTrades, isSubcribed } from 'src/helpers/Trades'
+// import { loadAggTradesLastMinutes } from 'src/helpers/BinanceApi'
+import { CandleOfTrades } from 'src/helpers/Candle'
+import { dataOf } from 'src/charts/data'
 
 export default {
   name: 'Monitor',
@@ -112,7 +114,7 @@ export default {
   watch: {
     ordermap () {
       if (this.ordermap.length >= this.order.length) {
-        const ordmap = [...this.ordermap].filter(e => e) // Not select possible undefined values
+        const ordmap = this.ordermap.filter(e => e) // Not select possible undefined values
         if (ordmap.length >= this.order.length) { // Only after all values are defined
           this.ordermap.length = 0 // Reset ordermap
           this.orderby = ordmap.sort((a, b) => { // Now defined the order
@@ -153,14 +155,17 @@ export default {
       this.follow.splice(index, 1)
     },
     unsubscribe (index) {
-      if (isSubcribed(this.follow[index])) removeTrades(this.follow[index])
-      const i = this.subscribed.findIndex(e => e.index === index)
-      if (i >= 0) this.subscribed.splice(i, 1)
+      if (this.subscribed[index]) this.subscribed[index].dismiss()
+      this.subscribed[index] = undefined
+    },
+    onclandle (symbol, { time, o, h, l, c, v }) {
+      const data = dataOf(symbol)
+      data.chart.data.push([time, o, h, l, c, v])
     },
     async subscribe (index) {
-      // this.subscribed.push({ index, coin: subcribeTrades(this.follow[index]) })
-      const r = await loadAggTradesLastMinutes(this.follow[index], 120)
-      if (subcribeTrades) console.log(r)
+      const symbol = this.order[index]
+      const candle = new CandleOfTrades(symbol, (c) => this.onclandle(symbol, c))
+      this.subscribed[index] = candle
     },
     ...mapMutations('binance', ['watch', 'forget']),
     ...mapActions('binance', ['loadPairs'])
