@@ -104,7 +104,7 @@ export default {
     isSubcribed () {
       return symbol => symbol in this.subscribed
     },
-    ...mapState('binance', ['pairs', 'watching'])
+    ...mapState('binance', ['pairs', 'watching', 'queueing'])
   },
   components: {
     row,
@@ -156,19 +156,27 @@ export default {
     unsubscribe (index) {
       const symbol = this.order[index]
       if (this.subscribed[symbol]) unsubcribeEnqueueCandles(symbol)
-      this.subscribed[symbol] = undefined
+      // this.subscribed[symbol] = undefined
+      this.$set(this.subscribed, symbol, undefined)
+      this.unqueue(symbol)
+    },
+    subscribeSymbol (symbol) {
+      const { queue, candle } = subcribeEnqueueCandles(symbol)
+      // this.subscribed[symbol] = { queue, candle }
+      this.$set(this.subscribed, symbol, { queue, candle })
+      this.queue(symbol)
     },
     subscribe (index) {
       const symbol = this.order[index]
-      const { queue, candle } = subcribeEnqueueCandles(symbol)
-      this.subscribed[symbol] = { queue, candle }
+      this.subscribeSymbol(symbol)
     },
-    ...mapMutations('binance', ['watch', 'forget']),
+    ...mapMutations('binance', ['watch', 'forget', 'queue', 'unqueue']),
     ...mapActions('binance', ['loadPairs'])
   },
   mounted () {
     this.loadPairs()
     this.follow = [...this.watching]
+    this.queueing.forEach(s => this.subscribeSymbol(s))
     // await bstream.subscribe('bnbusdt@ticker' /*, 'btcusdt@ticker', 'ltcusdt@ticker', 'ethusdt@ticker', 'adausdt@ticker' */)
   }
 }

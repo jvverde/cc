@@ -24,3 +24,14 @@ export function forget (state, symbol) {
   if (index < 0) return
   state.watching.splice(index, 1)
 }
+
+export function queue (state, symbol) {
+  if (state.queueing.includes(symbol)) return
+  state.queueing.push(symbol)
+}
+
+export function unqueue (state, symbol) {
+  const index = state.queueing.indexOf(symbol)
+  if (index < 0) return
+  state.queueing.splice(index, 1)
+}

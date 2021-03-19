@@ -6,7 +6,7 @@ import MA from './MovingAverage'
 const AVERAGES = [30, 100, 300, 1e3, 1e4, 1e5, 1e6]
 
 export default class Trades {
-  constructor (symbol, { maverages = AVERAGES, minago = 15 } = {}) {
+  constructor (symbol, { maverages = AVERAGES, minago = 60 } = {}) {
     this.ontrade = []
     this.mas = maverages.map(v => new MA(v))
     this.streamid = this._init(symbol, minago)

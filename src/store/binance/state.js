@@ -1,6 +1,7 @@
 export default function () {
   return {
     pairs: [],
-    watching: []
+    watching: [],
+    queueing: []
   }
 }

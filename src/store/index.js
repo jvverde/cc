@@ -24,7 +24,7 @@ export default function (/* { ssrContext } */) {
     // enable strict mode (adds overhead!)
     // for dev mode only
     strict: process.env.DEBUGGING,
-    plugins: [createPersistedState()]
+    plugins: [createPersistedState({ key: 'v1' })]
   })
 
   return Store
