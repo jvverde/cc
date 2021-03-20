@@ -1,14 +1,16 @@
 import { listen, dismiss } from './stream'
 import { loadAggTradesLastMinutes } from './BinanceApi'
 
-import MA from './MovingAverage'
+import { EMA } from './MovingAverage'
 
-const AVERAGES = [30, 100, 300, 1e3, 1e4, 1e5, 1e6]
+// const AVERAGES = [30, 100, 300, 1e3, 1e4, 1e5, 1e6]
+const AVERAGES = [3, 30, 300, 3e3, 3e4, 3e5, 3e6]
 
 export default class Trades {
   constructor (symbol, { maverages = AVERAGES, minago = 60 } = {}) {
     this.ontrade = []
-    this.mas = maverages.map(v => new MA(v))
+    // this.mas = maverages.map(v => new MA(v))
+    this.emas = maverages.map(v => new EMA(v))
     this.streamid = this._init(symbol, minago)
   }
 
@@ -33,8 +35,9 @@ export default class Trades {
     const time = t.T
     const price = Number(t.p)
     const quantity = Number(t.q)
-    const mas = this.mas.map(m => m.update(price, quantity))
-    this.ontrade.map(e => e.handler).forEach(h => h({ ...t, time, price, quantity, mas }))
+    // const mas = this.mas.map(m => m.update(price, quantity))
+    const emas = this.emas.map(m => m.update(price, quantity))
+    this.ontrade.map(e => e.handler).forEach(h => h({ ...t, time, price, quantity, emas }))
   }
 
   registerConsumer (handler) {

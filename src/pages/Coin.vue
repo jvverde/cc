@@ -8,7 +8,7 @@
           :height="height"
           :title-txt="symbol"
           :overlays="overlays"
-          :chart-config="{'MAX_ZOOM': 3000, 'MIN_ZOOM': 50}"
+          :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 100}"
           :legend-buttons="['settings', 'remove']"
           @legend-button-click="startstop"
           :color-back="colors.colorBack"
@@ -66,10 +66,11 @@ export default {
     }
   },
   methods: {
-    oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, mas, histogram }) {
+    oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, emas, histogram }) {
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
       this.dc.merge('onchart.Average.data', [[time, m]])
-      this.dc.merge('onchart.MovingAverages.data', [[time, ...mas]])
+      // this.dc.merge('onchart.MovingAverages.data', [[time, ...mas]])
+      this.dc.merge('onchart.ExponentialMovingAverages.data', [[time, ...emas]])
       this.dc.set('onchart.Maximum.data', [[T, max, min, zigzag]])
 
       const [x1, x2] = this.$refs.tradingVue.getRange()
@@ -98,51 +99,6 @@ export default {
         p1: [now - 60e3, s],
         p2: [now + 1e3, s]
       })
-
-      // histogram.ups.forEach(e => console.log('ups', e.i, ' => ', e.v))
-      // histogram.downs.forEach(e => console.log('downs', e.i, ' => ', e.v))
-      /*
-      const [, , , , m300, mlimit] = mas
-
-      const sell = () => {
-        this.money = this.asset * m * 0.9985
-        this.asset = 0
-        this.presell = this.prebuy = this.buy = 0
-        console.log('Sell', this.money, '@', m, new Date(time).toLocaleTimeString(), ama)
-      }
-      if (this.money > 0) {
-        if (m > m300 && m > this.lastm && m * 1.003 < mlimit) {
-          if (++this.prebuy >= 3) this.buy = true
-          else this.buy = false
-        } else {
-          this.prebuy = 0
-        }
-        if (this.buy) {
-          this.asset = this.money * 0.9985 / m
-          this.buyprice = m
-          this.money = 0
-          this.presell = this.prebuy = this.sell = 0
-          console.log('Buy', this.asset, '@', m, new Date(time).toLocaleTimeString())
-        }
-      } else if (this.asset > 0) {
-        if (m < m300 && m < this.lastm) {
-          if (++this.presell >= 3) this.sell = true
-          else this.sell = false
-        } else {
-          this.presell = this.sell = 0
-        }
-        if (this.sell && m > this.buyprice * 1.003) {
-          console.log('Sell with profig', (m - this.buyprice) * this.asset)
-          sell()
-        } else if (this.buyprice > m * 1.02) {
-          console.log('Limit loss to 2%')
-          sell()
-        }
-      }
-      this.lastm = m
-      this.dc.update({
-        Funds: this.funds
-      }) */
     },
     onresize () {
       try {
@@ -155,6 +111,27 @@ export default {
     startstop (e) {
       console.log('Event', e)
       this.stop = !this.stop
+    },
+    init (candles) {
+      const chart = []
+      const _m = []
+      // const _mas = []
+      const _emas = []
+      const maxmin = []
+      for (const candle of candles) {
+        // const { o, h, l, c, v, t, T, m, time, max, min, zigzag, mas, emas, histogram } = c
+        const { time, o, h, l, c, v, m, emas, T, max, min, zigzag } = candle
+        chart.push([time, o, h, l, c, v])
+        _m.push([time, m])
+        // _mas.push([time, ...mas])
+        _emas.push([time, ...emas])
+        maxmin[0] = [T, max, min, zigzag]
+      }
+      this.dc.set('chart.data', chart)
+      this.dc.set('onchart.Average.data', _m)
+      // this.dc.set('onchart.MovingAverages.data', _mas)
+      this.dc.set('onchart.ExponentialMovingAverages.data', _emas)
+      this.dc.set('onchart.Maximum.data', maxmin)
     }
   },
   mounted () {
@@ -163,9 +140,7 @@ export default {
     this.onresize()
     window.addEventListener('resize', this.onresize)
     const { queue, candle } = subcribeEnqueueCandles(this.symbol)
-    for (const c of queue) {
-      this.oncandle(c)
-    }
+    this.init([...queue])
     this.candle = candle
     this.handlerid = candle.addHandler(c => this.oncandle(c))
   },

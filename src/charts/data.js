@@ -30,7 +30,19 @@ export default function dataTemplate () {
         settings: {
           legend: false,
           'z-index': 5,
-          colors: ['blue', 'cyan', 'Orchid', 'Pink', 'IndianRed', 'salmon', 'DarkSalmon', 'LightSalmon']
+          lineWidths: [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7],
+          colors: ['orange', 'Chocolate', 'PeachPuff', 'Sienna', 'LemonChiffon', 'PaleGoldenrod', 'Moccasin', 'PapayaWhip']
+        }
+      },
+      {
+        name: 'ExponentialMovingAverages',
+        type: 'Splines',
+        data: [],
+        settings: {
+          legend: false,
+          'z-index': 5,
+          lineWidths: [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7],
+          colors: ['DodgerBlue', 'Cyan', 'CornflowerBlue', 'Aquamarine', 'RoyalBlue', 'Turquoise', 'LightCyan', 'PowderBlue']
         }
       },
       {

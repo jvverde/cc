@@ -43,7 +43,7 @@ export default class Queue {
     return this.head === this.tail
   }
 
-  rotate (v) {
+  pusha (v) {
     if (this.isFull) {
       const old = this._remove()
       this.push(v)
