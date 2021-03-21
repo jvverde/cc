@@ -3,8 +3,8 @@ import { loadAggTradesLastMinutes } from './BinanceApi'
 
 import { EMA } from './MovingAverage'
 
+import { AVERAGES } from 'src/config'
 // const AVERAGES = [30, 100, 300, 1e3, 1e4, 1e5, 1e6]
-const AVERAGES = [3, 30, 300, 3e3, 3e4, 3e5, 3e6]
 
 export default class Trades {
   constructor (symbol, { maverages = AVERAGES, minago = 60 } = {}) {

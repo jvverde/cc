@@ -13,16 +13,25 @@
     </q-item>
     <q-item :clickable="current !== 'monitor'" @click="$router.push({ name: 'monitor' })">
       <q-item-section avatar>
-        <q-icon color="menu" name="backup" />
+        <q-icon color="menu" name="list" />
       </q-item-section>
       <q-item-section>
         <q-item-label>Monitor</q-item-label>
         <q-item-label caption>Monitoring assets</q-item-label>
       </q-item-section>
     </q-item>
+    <q-item :clickable="current !== 'all'" @click="$router.push({ name: 'all' })">
+      <q-item-section avatar>
+        <q-icon color="menu" name="view_stream" />
+      </q-item-section>
+      <q-item-section>
+        <q-item-label>All Trading pair</q-item-label>
+        <q-item-label caption>See current stats for all coins</q-item-label>
+      </q-item-section>
+    </q-item>
     <q-item :clickable="current !== 'keys'" @click="$router.push({ name: 'keys' })">
       <q-item-section avatar>
-        <q-icon color="menu" name="backup" />
+        <q-icon color="menu" name="password" />
       </q-item-section>
       <q-item-section>
         <q-item-label>Keys</q-item-label>

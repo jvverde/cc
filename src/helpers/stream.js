@@ -7,7 +7,6 @@ const limiter = new Bottleneck({
   minTime: 250
 })
 
-// export default class Stream {
 let endpoint
 let status = ''
 let pResolve
@@ -163,4 +162,3 @@ export function dismiss (...ids) {
   const streams = ids.flat(Infinity).map(id => uninstall(id)).filter(s => s)
   return unsubscribe(...streams)
 }
-// }
