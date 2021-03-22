@@ -26,7 +26,7 @@ export default class Tickers {
       const symbol = t.s
       this.emasOf[symbol] = this.emasOf[symbol] || this.maverages.map(v => new EMA(v))
       // const mas = this.mas.map(m => m.update(price, quantity))
-      const emas = this.emasOf[symbol].map(m => m.update(price, quantity))
+      const emas = this.emasOf[symbol].map(m => m.update(price))
       this.onticker.map(e => e.handler).forEach(h => h({ ...t, time, price, quantity, volume, symbol, emas }))
     })
   }
