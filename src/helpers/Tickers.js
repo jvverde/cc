@@ -12,7 +12,7 @@ export default class Tickers {
     this.onticker = handler ? [{ handler }] : []
     this.maverages = maverages
     this.match = match
-    this.emasOf = {}
+    this.emas = {}
     this.streamid = listen((t) => { this.tickerEvent(t) }, '!miniTicker@arr')
   }
 
@@ -24,9 +24,9 @@ export default class Tickers {
       const quantity = Number(t.v) // https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#terminology
       const volume = Number(t.q) // And https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md#all-market-mini-tickers-stream
       const symbol = t.s
-      this.emasOf[symbol] = this.emasOf[symbol] || this.maverages.map(v => new EMA(v))
+      this.emas[symbol] = this.emas[symbol] || this.maverages.map(v => new EMA(v))
       // const mas = this.mas.map(m => m.update(price, quantity))
-      const emas = this.emasOf[symbol].map(m => m.update(price))
+      const emas = this.emas[symbol].map(m => m.update(price))
       this.onticker.map(e => e.handler).forEach(h => h({ ...t, time, price, quantity, volume, symbol, emas }))
     })
   }

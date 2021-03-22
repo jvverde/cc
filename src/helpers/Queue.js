@@ -1,30 +1,30 @@
 export default class Queue {
-  constructor (size = 300) {
-    this.head = 0
-    this.tail = 0
-    this.buff = new Array(size).map(e => null)
-    this.size = size
+  constructor (size = 301) {
+    this._head = 0
+    this._tail = 0
+    this._buff = new Array(size).map(e => null)
+    this._size = size
   }
 
-  _inc (index) { return (index + 1) % this.size }
+  _inc (index) { return (index + 1) % this._size }
 
-  _incHead () { return (this.head = this._inc(this.head)) }
+  _incHead () { return (this._head = this._inc(this._head)) }
 
-  _incTail () { return (this.tail = this._inc(this.tail)) }
+  _incTail () { return (this._tail = this._inc(this._tail)) }
+
+  _remove () {
+    const v = this._buff[this._tail]
+    // this._tail = (this._tail + 1) % this._size
+    this._incTail()
+    return v
+  }
 
   push (v) {
     if (this.isFull) this._incTail() // If it is full push tail one position
-    this.buff[this.head] = v
-    // this.head = (this.head + 1) % this.size
+    this._buff[this._head] = v
+    // this._head = (this._head + 1) % this._size
     this._incHead()
-    return this.head
-  }
-
-  _remove () {
-    const v = this.buff[this.tail]
-    // this.tail = (this.tail + 1) % this.size
-    this._incTail()
-    return v
+    return this._head
   }
 
   shift () {
@@ -33,14 +33,6 @@ export default class Queue {
     } else {
       return this._remove()
     }
-  }
-
-  get isFull () {
-    return (this.head + 1) % this.size === this.tail
-  }
-
-  get isEmpty () {
-    return this.head === this.tail
   }
 
   pusha (v) {
@@ -55,13 +47,13 @@ export default class Queue {
   }
 
   [Symbol.iterator] () {
-    let index = this.tail
+    let index = this._tail
     const done = true
     return {
       next: () => {
-        if (index !== this.head) {
-          const value = this.buff[index]
-          index = (1 + index) % this.size
+        if (index !== this._head) {
+          const value = this._buff[index]
+          index = (1 + index) % this._size
           return { value }
         } else {
           return { done }
@@ -69,11 +61,21 @@ export default class Queue {
       }
     }
   }
+
+  get isFull () {
+    return (this._head + 1) % this._size === this._tail
+  }
+
+  get isEmpty () {
+    return this._head === this._tail
+  }
+
+  get size () { return this._size - 1 }
 }
 
 export class QueueZ extends Queue {
   constructor (size, obj = 0) {
     super(size)
-    this.buff = this.buff.map(e => obj)
+    this._buff = this._buff.map(e => obj)
   }
 }

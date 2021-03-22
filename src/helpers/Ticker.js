@@ -19,12 +19,12 @@ export default class TickersQueue extends Queue {
   }
 
   chg (nticks) {
-    const { size, head, buff } = this
-    if (nticks >= size) return undefined
-    const lastIndex = (head - 1 + size) % size
-    const firstIndex = (head - 1 - nticks + size) % size
-    const last = buff[lastIndex]
-    const first = buff[firstIndex]
+    const { _size, _head, _buff } = this
+    if (nticks >= _size) return undefined
+    const lastIndex = (_head - 1 + _size) % _size
+    const firstIndex = (_head - 1 - nticks + _size) % _size
+    const last = _buff[lastIndex]
+    const first = _buff[firstIndex]
     if (first === undefined || last === undefined) return {}
     const val = (last.c - first.c) / first.c
     const time = (last.E - first.E) / 1000
