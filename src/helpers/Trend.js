@@ -1,6 +1,4 @@
-import { EMA } from './MovingAverage'
 import Queue from './Queue'
-import { AVERAGES } from 'src/config'
 
 const trend = (...a) => {
   a = a.flat(Infinity)
@@ -23,28 +21,22 @@ const trend = (...a) => {
   return undefined
 }
 
-export default class Value {
-  constructor ({ maverages = AVERAGES, maxtrendsize = 10 } = {}) {
+export default class Trend {
+  constructor ({ maxtrendsize = 12 } = {}) {
     this._queue = new Queue(maxtrendsize)
-    this._emas = this.maverages.map(e => new EMA(e))
   }
 
-  set value (v) {
+  pusha (v) {
     this._value = v
-    this._emas.forEach(e => e.update(v))
-    this._queue.pusha(v)
-    this._trend = trend(...queue, v)
+    this._trend = trend(...this._queue, v)
+    return this._queue.pusha(v)
   }
 
-  get emas () { return this._emas.map(e => e.value) }
-
-  get value () { return this._value }
-
-  get trend () { return this._trend }
+  get direction () { return this._trend }
 
   get magnitude () {
     const queue = [...this._queue]
-    const index = queue.length - Math.abs(this._trend)
+    const index = queue.length - 1 - Math.abs(this._trend)
     const v = queue[index] ? queue[index] : this._value
     return (this._value - v) / v
   }
@@ -56,7 +48,7 @@ export default class Value {
     return {
       next: () => {
         if (index < values.length) {
-          const value = values[index]
+          const value = values[index++]
           return { value }
         } else {
           return { done }

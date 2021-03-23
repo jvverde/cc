@@ -25,10 +25,11 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
-      <!--keep-alive :max='5'>
-        <router-view />
-      </keep-alive-->
+      <transition>
+        <keep-alive :exclude="/coin/" :max="10">
+          <router-view />
+        </keep-alive>
+      </transition>
     </q-page-container>
   </q-layout>
 </template>

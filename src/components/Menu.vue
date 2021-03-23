@@ -11,7 +11,7 @@
         </q-item-label>
       </q-item-section>
     </q-item>
-    <q-item :clickable="current !== 'monitor'" @click="$router.push({ name: 'monitor' })">
+    <!--q-item :clickable="current !== 'monitor'" @click="$router.push({ name: 'monitor' })">
       <q-item-section avatar>
         <q-icon color="menu" name="list" />
       </q-item-section>
@@ -19,7 +19,7 @@
         <q-item-label>Monitor</q-item-label>
         <q-item-label caption>Monitoring assets</q-item-label>
       </q-item-section>
-    </q-item>
+    </q-item-->
     <q-item :clickable="current !== 'all'" @click="$router.push({ name: 'all' })">
       <q-item-section avatar>
         <q-icon color="menu" name="view_stream" />
