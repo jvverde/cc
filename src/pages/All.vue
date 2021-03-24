@@ -6,9 +6,9 @@
       :data="data"
       :columns="columns"
       :visibleColumns="visibleColumns"
-      :rows-per-page-options="[0]"
+      :rows-per-page-options="[10]"
       row-key="symbol"
-      hide-bottom
+      NOT-hide-bottom
     >
       <template v-slot:top="props">
         <div class="col-4 q-table__title">Last {{time()}} seconds of coins performance</div>
@@ -144,7 +144,8 @@ export default {
   methods: {
     onticker (t) {
       const s = t.s
-
+      const start = Date.now()
+      console.log('diff, event, now', start - t.time, new Date(t.time).toLocaleTimeString(), new Date(start).toLocaleTimeString())
       this.events[s] = 1 + (this.events[s] || 0)
 
       const pTrend = this.pTrends[s] = this.pTrends[s] || new Trend()
