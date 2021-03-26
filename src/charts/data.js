@@ -28,7 +28,7 @@ export default function dataTemplate () {
         type: 'Splines',
         data: [],
         settings: {
-          legend: false,
+          legend: true,
           'z-index': 5,
           lineWidths: [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7],
           colors: ['orange', 'Chocolate', 'PeachPuff', 'Sienna', 'LemonChiffon', 'PaleGoldenrod', 'Moccasin', 'PapayaWhip']
@@ -38,8 +38,11 @@ export default function dataTemplate () {
         name: 'ExponentialMovingAverages',
         type: 'Splines',
         data: [],
+        onsettings (e) {
+          console.log('Aqui', this)
+        },
         settings: {
-          legend: false,
+          legend: true,
           'z-index': 5,
           lineWidths: [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7],
           colors: ['DodgerBlue', 'Cyan', 'CornflowerBlue', 'Aquamarine', 'RoyalBlue', 'Turquoise', 'LightCyan', 'PowderBlue']

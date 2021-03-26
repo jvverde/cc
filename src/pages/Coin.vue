@@ -10,13 +10,44 @@
           :overlays="overlays"
           :chart-config="{'MAX_ZOOM': 6000, 'MIN_ZOOM': 100}"
           :legend-buttons="['settings', 'remove']"
-          @legend-button-click="startstop"
+          @legend-button-click="legend"
           :color-back="colors.colorBack"
           :color-grid="colors.colorGrid"
           :color-text="colors.colorText">
       </trading-vue>
       <q-btn class="q-mt-sm" color="brown" size="xs" label="Start/Stop" icon="pause" rounded @click="startstop"/>
     </div>
+    <!-- q-dialog v-model="changecolors">
+      <q-card>
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Chose colors</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section>
+          <q-list dense>
+            <q-item  v-for="(color, index) in overlaycolors" :key="index" dense>
+              <q-item-section side>
+                EMA({{ maverages[index] }}):
+              </q-item-section>
+              <q-item-section/>
+              <q-item-section :style="`color: ${color}`" side>
+                {{ color }}
+                <q-popup-edit v-model="overlaycolors[index]">
+                  <q-input v-model="overlaycolors[index]" dense>
+                    <template v-slot:append>
+                      <q-icon name="edit" />
+                    </template>
+                  </q-input>
+                </q-popup-edit>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+      </q-card>
+    </q-dialog -->
+    <colorname :select.sync="changecolors" :names.sync="overlaycolors"/>
     <q-resize-observer @resize="onresize" />
   </q-page>
 </template>
@@ -27,6 +58,7 @@ import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import data from 'src/charts/data'
 import { subcribeEnqueueCandles } from 'src/helpers/Candle'
+import colorname from 'src/components/ColorName'
 
 const settings = { auto_scroll: true }
 
@@ -34,6 +66,8 @@ export default {
   name: 'coin',
   data () {
     return {
+      changecolors: false,
+      overlaycolors: [],
       candle: undefined,
       stop: false,
       dc: new DataCube(data(), settings),
@@ -43,7 +77,8 @@ export default {
     }
   },
   components: {
-    TradingVue
+    TradingVue,
+    colorname
   },
   computed: {
     ...mapState('binance', ['maverages']),
@@ -66,6 +101,9 @@ export default {
       type: Boolean,
       default: true
     }
+  },
+  watch: {
+    overlaycolors (v) { console.log(v) }
   },
   methods: {
     oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, emas, histogram }) {
@@ -111,8 +149,17 @@ export default {
       }
     },
     startstop (e) {
-      console.log('Event', e)
       this.stop = !this.stop
+    },
+    legend (e) {
+      console.log('Event', e)
+      if (e.button === 'settings' && e.type === 'onchart') {
+        const data = this.dc.data.onchart[e.dataIndex]
+        this.overlaycolors = data.settings.colors
+        console.log(data)
+        this.changecolors = true
+        // this.dc.data.onchart[e.dataIndex].onsettings(e)
+      }
     },
     init (candles) {
       const chart = []
