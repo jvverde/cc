@@ -22,6 +22,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import data from 'src/charts/data'
@@ -45,6 +46,7 @@ export default {
     TradingVue
   },
   computed: {
+    ...mapState('binance', ['maverages']),
     funds () { return this.money + this.lastm * this.asset },
     stream () { return this.symbol.toLowerCase() + '@aggTrade' },
     colors () {
@@ -139,7 +141,8 @@ export default {
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
     window.addEventListener('resize', this.onresize)
-    const { queue, candle } = subcribeEnqueueCandles(this.symbol)
+    const maverages = this.maverages
+    const { queue, candle } = subcribeEnqueueCandles(this.symbol, { maverages })
     this.init([...queue])
     this.candle = candle
     this.handlerid = candle.addHandler(c => this.oncandle(c))

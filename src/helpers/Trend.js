@@ -32,7 +32,7 @@ export default class Trend {
       this._down(v)
     }
     this._value = v
-    return this._cnt
+    return this
   }
 
   get direction () { return this._cnt }

@@ -84,7 +84,7 @@ export class Candle1m extends CandleEvery {
 const ONEMONTH = 30 * 24 * 3600e3
 
 export class CandleOfTrades extends CandleEvery {
-  constructor (symbol, handler = () => null, { interval = 1000, since = ONEMONTH } = {}) {
+  constructor (symbol, handler = () => null, { interval = 1000, since = ONEMONTH, maverages } = {}) {
     super(interval)
     super.onclose = this.candleEvent
     const id = idMaker()
@@ -95,7 +95,7 @@ export class CandleOfTrades extends CandleEvery {
     this.min = { time: -Infinity, price: Infinity }
     this.histogram = new Histogram()
     this.since = since
-    this.producer = subcribeTrades(symbol)
+    this.producer = subcribeTrades(symbol, { maverages })
     this.consumerId = this.producer.registerConsumer((sample) => this.insert(sample))
   }
 
