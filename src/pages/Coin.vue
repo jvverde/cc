@@ -27,15 +27,15 @@
 
         <q-card-section>
           <q-list dense>
-            <q-item  v-for="(color, index) in overlaycolors" :key="index" dense>
+            <q-item  v-for="(color, index) in color4emas" :key="index" dense>
               <q-item-section side>
                 EMA({{ maverages[index] }}):
               </q-item-section>
               <q-item-section/>
               <q-item-section :style="`color: ${color}`" side>
                 {{ color }}
-                <q-popup-edit v-model="overlaycolors[index]">
-                  <q-input v-model="overlaycolors[index]" dense>
+                <q-popup-edit v-model="color4emas[index]">
+                  <q-input v-model="color4emas[index]" dense>
                     <template v-slot:append>
                       <q-icon name="edit" />
                     </template>
@@ -47,13 +47,13 @@
         </q-card-section>
       </q-card>
     </q-dialog -->
-    <colorname :select.sync="changecolors" :names.sync="overlaycolors"/>
+    <colorname :select.sync="changecolors" :names.sync="colors4emas" :min="maverages.length"/>
     <q-resize-observer @resize="onresize" />
   </q-page>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import data from 'src/charts/data'
@@ -67,7 +67,6 @@ export default {
   data () {
     return {
       changecolors: false,
-      overlaycolors: [],
       candle: undefined,
       stop: false,
       dc: new DataCube(data(), settings),
@@ -81,7 +80,7 @@ export default {
     colorname
   },
   computed: {
-    ...mapState('binance', ['maverages']),
+    ...mapState('binance', ['maverages', 'emacolors']),
     funds () { return this.money + this.lastm * this.asset },
     stream () { return this.symbol.toLowerCase() + '@aggTrade' },
     colors () {
@@ -89,6 +88,15 @@ export default {
         colorBack: '#fff',
         colorGrid: '#eee',
         colorText: '#333'
+      }
+    },
+    colors4emas: {
+      get () { return this.emacolors },
+      set (v) {
+        this.setEmacolors(v)
+        if (v && v.length >= this.maverages.length) {
+          this.applyEmaColors()
+        }
       }
     }
   },
@@ -103,9 +111,9 @@ export default {
     }
   },
   watch: {
-    overlaycolors (v) { console.log(v) }
   },
   methods: {
+    ...mapMutations('binance', ['setEmacolors']),
     oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, emas, histogram }) {
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
       this.dc.merge('onchart.Average.data', [[time, m]])
@@ -155,11 +163,14 @@ export default {
       console.log('Event', e)
       if (e.button === 'settings' && e.type === 'onchart') {
         const data = this.dc.data.onchart[e.dataIndex]
-        this.overlaycolors = data.settings.colors
-        console.log(data)
+        this.color4emas = data.settings.colors
         this.changecolors = true
-        // this.dc.data.onchart[e.dataIndex].onsettings(e)
       }
+    },
+    applyEmaColors () {
+      this.dc.set('onchart.ExponentialMovingAverages.settings', {
+        colors: this.colors4emas
+      })
     },
     init (candles) {
       const chart = []
@@ -193,6 +204,7 @@ export default {
     this.init([...queue])
     this.candle = candle
     this.handlerid = candle.addHandler(c => this.oncandle(c))
+    this.applyEmaColors()
   },
   beforeDestroy () {
     console.log('destroy...')

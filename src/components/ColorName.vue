@@ -1,19 +1,36 @@
 <template>
-  <q-dialog v-model="model" full-width>
-    <q-card>
+  <q-dialog v-model="model">
+    <q-card  style="max-width: 60vw">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Choose colors</div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
       <q-card-section>
-        <div v-for="(group, name) in contrastedColors" :key="name">
+        <q-chip :style="`color: ${name}`"
+          :label="name"
+          removable @remove="remove(index)"
+          v-for="(name, index) in values" :key="index"
+        />
+      </q-card-section>
+      <q-separator />
+      <q-card-section class="scroll" style="max-height: 70vh" >
+        <div v-for="(group, name) in contrastedColors" :key="name" class="col">
           <span :style="`color: ${name}`">{{ name }}:</span>
-          <span v-for="(color, index) in group" :key="name+index" :style="`color: ${color}`">
-            <q-checkbox size="xs" v-model="values" :val="color" :label="color" class="forcecolor" :style="`color: ${color}`"/>
-          </span>
+          <div class="row q-ml-xl">
+            <span v-for="(color, index) in group" :key="name+index" :style="`color: ${color}`">
+              <q-checkbox size="xs" v-model="values" :val="color" :label="color"
+                :style="`color: ${color}`"
+                class="forceinherith"
+                :class="{forcewhite: isLight, forcedark: isDark}"
+              />
+            </span>
+          </div>
         </div>
       </q-card-section>
+      <q-card-actions align="right">
+        <q-btn :disable="!isEnough" flat label="Accept" color="green" v-close-popup />
+      </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
@@ -37,6 +54,10 @@ export default {
     names: {
       type: Array,
       required: true
+    },
+    min: {
+      type: Number,
+      default: 1
     }
   },
   computed: {
@@ -47,27 +68,35 @@ export default {
       }
     },
     values: {
-      get () { return this.names.map(c => c.toLowerCase()) },
+      get () { return this.names.map(c => c.toLowerCase()).filter(c => this.hasContrast(c)) },
       set (val) {
         this.$emit('update:names', val)
       }
     },
+    isDark () { return this.$q.dark.isActive },
+    isLight () { return !this.$q.dark.isActive },
     contrastedColors () {
       const r = {}
       for (const [group, colors] of Object.entries(this.colors)) {
-        r[group] = colors.filter(c => {
-          const color = Color(c)
-          return color.isLight()
-        })
+        r[group] = colors.filter(c => this.hasContrast(c))
       }
       return r
-    }
+    },
+    isEnough () { return this.values.length >= this.min }
   },
   watch: {
   },
   components: {
   },
   methods: {
+    remove (index) {
+      this.values.splice(index, 1)
+      this.values = [...this.values]
+    },
+    hasContrast (c) {
+      const color = Color(c)
+      return (color.isLight() && this.isDark) || (color.isDark() && this.isLight)
+    }
   },
   mounted () {
   },
@@ -76,7 +105,13 @@ export default {
 }
 </script>
 <style lang="scss">
-  .forcecolor div {
+  .forceinherith div {
     color: inherit !important;
+  }
+  .forcedark svg {
+    color: black !important;
+  }
+  .forcewhite svg {
+    color: white !important;
   }
 </style>

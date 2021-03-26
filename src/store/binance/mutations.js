@@ -35,3 +35,7 @@ export function unqueue (state, symbol) {
   if (index < 0) return
   state.queueing.splice(index, 1)
 }
+
+export function setEmacolors (state, colors) {
+  state.emacolors = colors
+}
