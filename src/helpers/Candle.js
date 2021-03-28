@@ -3,11 +3,7 @@ import { updateMax, updateMin } from './MaxMin'
 import { zigzag } from './Utils'
 import Histogram from './Histogram'
 import Queue from './Queue'
-
-function* idMaker () {
-  let index = 0
-  while (true) yield index++
-}
+import { getNewId } from 'src/helpers/Utils'
 
 export class Candle {
   open (o = 0, q = 0) {
@@ -87,7 +83,7 @@ export class CandleOfTrades extends CandleEvery {
   constructor (symbol, handler = () => null, { interval = 1000, since = ONEMONTH, maverages } = {}) {
     super(interval)
     super.onclose = this.candleEvent
-    const id = idMaker()
+    const id = getNewId()
     this.oncandle = [{ id, handler }]
     this.zigzag = []
     this.since = since
@@ -110,7 +106,7 @@ export class CandleOfTrades extends CandleEvery {
   }
 
   addHandler (handler) {
-    const id = idMaker()
+    const id = getNewId()
     this.oncandle.push({ id, handler })
   }
 

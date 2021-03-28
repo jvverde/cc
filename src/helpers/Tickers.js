@@ -1,11 +1,7 @@
 import { listen, dismiss } from './stream'
 import { EMA } from './MovingAverage'
 import { AVERAGES } from 'src/config'
-
-function* idMaker () {
-  let index = 0
-  while (true) yield index++
-}
+import { getNewId } from 'src/helpers/Utils'
 
 export default class Tickers {
   constructor ({ maverages = AVERAGES, handler, match } = {}) {
@@ -32,7 +28,7 @@ export default class Tickers {
   }
 
   registerConsumer (handler) {
-    const id = idMaker()
+    const id = getNewId()
     this.onticker.push({ id, handler })
     return id
   }
@@ -59,7 +55,7 @@ const dispatcher = tickers => {
 }
 
 const setHandler = (symbol, handler) => {
-  const id = idMaker()
+  const id = getNewId()
   _allTickers = _allTickers || new Tickers({ handler: dispatcher })
   _handlerOf[symbol] = _handlerOf[symbol] || []
   _handlerOf[symbol].push({ id, handler })
