@@ -49,3 +49,14 @@ export const zigzag = (max, min) => {
   }
   return points
 }
+
+function* idMaker () {
+  let index = 0
+  while (true) yield index++
+}
+
+const generator = idMaker()
+
+export function getNewId () {
+  return generator.next().value
+}

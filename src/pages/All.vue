@@ -248,6 +248,7 @@ export default {
       let data = this.data
       for (const f of this.filters) {
         if (f.test instanceof Function) {
+          // console.log(f)
           data = data.filter(obj => f.test(obj))
         }
       }

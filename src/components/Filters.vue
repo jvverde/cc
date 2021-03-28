@@ -13,18 +13,18 @@
       </q-card-actions>
       <q-separator />
       <q-card-section class="scroll" style="max-height: 70vh">
-        <div v-for="(filter, index) in current" :key="index" class="row no-wrap items-center q-gutter-md">
+        <div v-for="(filter, index) in current" :key="index + 'filter'" class="row no-wrap items-center q-gutter-md">
           <div style="min-width:8em">{{ filter.label }}</div>
           <q-select borderless stack-label
             style="min-width:12em"
             v-model="filter.type"
             label="Comparison" dense options-dense
-            :options="names"
-            @input="changed(index)"
+            :options="filternames"
+            @input="change(filter)"
           />
           <q-input flat borderless label="Reference value"
-            v-model="filter.ref" @input="changed(index)"/>
-          <q-btn icon="clear" color="red" flat size="xs" round @click="remove" />
+            v-model="filter.ref" @input="change(filter)"/>
+          <q-btn icon="clear" color="red" flat size="xs" round @click="remove(filter)" />
         </div>
       </q-card-section>
       <q-card-actions align="right">
@@ -35,6 +35,7 @@
 </template>
 
 <script>
+import { getNewId } from 'src/helpers/Utils'
 
 const val = v => {
   return isNaN(v) ? v : +v
@@ -91,14 +92,8 @@ export default {
         this.$emit('update:model', val)
       }
     },
-    _filters: {
-      get () { return this.filters },
-      set (val) {
-        this.$emit('update:filters', val)
-      }
-    },
-    current () { return this._filters.filter(e => e.name === this.name) },
-    names () { return Object.keys(filtertypes) }
+    current () { return this.filters.filter(e => e.name === this.name) },
+    filternames () { return Object.keys(filtertypes) }
   },
   watch: {
   },
@@ -107,25 +102,27 @@ export default {
   methods: {
     add () {
       const filter = {
+        id: getNewId(),
+        test: () => true,
         type: undefined,
         ref: undefined,
         label: this.label,
         name: this.name,
         valueOf: this.valueof
       }
-      this._filters.push(filter)
+      this.filters.push(filter)
     },
-    remove (index) {
-      this._filters.splice(index, 1)
-      this.$emit('remove', index)
+    remove (f) {
+      const index = this.filters.findIndex(e => e.id === f.id)
+      this.filters.splice(index, 1)
     },
-    changed (index) {
-      const { ref, type, valueOf } = this.current[index]
+    change (f) {
+      const { ref, type, valueOf } = f
       const test = filtertypes[type]
       if (ref !== undefined && test instanceof Function) {
-        this.current[index].test = filter(test, valueOf, ref)
+        f.test = filter(test, valueOf, ref)
       } else {
-        this.current[index].test = () => true
+        f.test = () => true
       }
     }
   },
