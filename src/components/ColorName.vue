@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="model">
-    <q-card  style="max-width: 60vw">
+    <q-card style="max-width: 60vw">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Choose colors</div>
         <q-space />

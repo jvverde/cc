@@ -1,26 +1,34 @@
 <template>
-  <q-dialog v-model="selected">
-    <q-card  style="max-width: 60vw">
+  <q-dialog v-model="selected" :content-style="{ backgroundColor: 'rgb(128, 128, 128, .5)' }">
+    <q-card class="filter-card">
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Choose filter</div>
+        <div class="text-h6">Filter</div>
         <q-space />
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat size="xs" round dense color="purple" v-close-popup />
       </q-card-section>
       <q-separator />
-      <q-card-section class="scroll" style="max-height: 70vh" >
-        <div v-for="(filter, index) in current" :key="index" class="col">
-          <span>{{ filter.field }}</span>
-          <q-select
+      <q-card-actions align="right">
+        <span v-if="current.length === 0">You probably want to add a new filter -&gt;</span>
+        <q-btn icon="playlist_add" flat size="sm" round color="green" @click="add" />
+      </q-card-actions>
+      <q-separator />
+      <q-card-section class="scroll" style="max-height: 70vh">
+        <div v-for="(filter, index) in current" :key="index" class="row no-wrap items-center q-gutter-md">
+          <div style="min-width:8em">{{ filter.label }}</div>
+          <q-select borderless stack-label
+            style="min-width:12em"
             v-model="filter.type"
-            label="Type" dense options-dense
+            label="Comparison" dense options-dense
             :options="names"
-            @input="v => changetype(v, index)"
+            @input="changed(index)"
           />
-          <q-input outlined v-model="filter.ref" label="Outlined" @input="v => changeref(v, index)"/>
+          <q-input flat borderless label="Reference value"
+            v-model="filter.ref" @input="changed(index)"/>
+          <q-btn icon="clear" color="red" flat size="xs" round @click="remove" />
         </div>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat label="Accept" color="green" v-close-popup />
+        <q-btn flat label="Accept" color="green-8" v-close-popup />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -35,11 +43,16 @@ const filtertypes = {
   great: (v, ref) => val(v) > val(ref),
   less: (v, ref) => val(v) < val(ref),
   equal: (v, ref) => val(v) === val(ref),
-  match: (v, re) => v.match(re),
-  between: (v, ref1, ref2) => val(v) > val(ref1) && val(v) < val(ref2)
+  StringGreat: (v, ref) => v > ref,
+  StringLess: (v, ref) => v < ref,
+  StringEqual: (v, ref) => v === ref,
+  NumericGreat: (v, ref) => +v > +ref,
+  NumericLess: (v, ref) => +v < +ref,
+  NumericEqual: (v, ref) => +v === +ref,
+  match: (v, re) => v.match(new RegExp(re))
 }
 
-// a filter is created from a test and one or more reference values
+// a filter is created from a test function, a valueOf function and one or more reference values
 const filter = (test, valueOf, ...refs) => obj => test(valueOf(obj), ...refs)
 
 export default {
@@ -57,6 +70,18 @@ export default {
     filters: {
       type: Array,
       required: true
+    },
+    label: {
+      type: String,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    valueof: {
+      type: Function,
+      required: true
     }
   },
   computed: {
@@ -66,12 +91,13 @@ export default {
         this.$emit('update:model', val)
       }
     },
-    current: {
+    _filters: {
       get () { return this.filters },
       set (val) {
         this.$emit('update:filters', val)
       }
     },
+    current () { return this._filters.filter(e => e.name === this.name) },
     names () { return Object.keys(filtertypes) }
   },
   watch: {
@@ -79,18 +105,28 @@ export default {
   components: {
   },
   methods: {
-    changetype (type, index) {
-      const ref = this.current[index].ref || ''
-      const test = filtertypes[type]
-      const valueOf = this.current[index].valueOf
-      this.current[index].test = filter(test, valueOf, ref)
-      console.log(type, index, this.current)
+    add () {
+      const filter = {
+        type: undefined,
+        ref: undefined,
+        label: this.label,
+        name: this.name,
+        valueOf: this.valueof
+      }
+      this._filters.push(filter)
     },
-    changeref (ref, index) {
-      const test = filtertypes[this.current[index].type] || (() => true)
-      const valueOf = this.current[index].valueOf
-      this.current[index].test = filter(test, valueOf, ref)
-      console.log(ref, index, this.current)
+    remove (index) {
+      this._filters.splice(index, 1)
+      this.$emit('remove', index)
+    },
+    changed (index) {
+      const { ref, type, valueOf } = this.current[index]
+      const test = filtertypes[type]
+      if (ref !== undefined && test instanceof Function) {
+        this.current[index].test = filter(test, valueOf, ref)
+      } else {
+        this.current[index].test = () => true
+      }
     }
   },
   mounted () {
@@ -99,5 +135,9 @@ export default {
   }
 }
 </script>
-<style lang="scss">
+<style scoped lang="scss">
+  .filter-card {
+    max-width: 80vw;
+    border: 1px solid gray;
+  }
 </style>

@@ -94,7 +94,8 @@
       </template-->
 
     </q-table>
-    <myfilter :model.sync="editfilter" :filters.sync="filterOf"/>
+    <myfilter :model.sync="editfilter" :filters.sync="filters" :name="filtername" :label="filterlabel"
+      :valueof="filtervalueof"/>
   </q-page>
 </template>
 
@@ -206,7 +207,9 @@ export default {
       columns,
       visibleColumns: columns.map(c => c.name),
       filters: [],
-      filterOf: [],
+      filterlabel: '',
+      filtername: '',
+      filtervalueof: () => true,
       editfilter: false
     }
   },
@@ -221,7 +224,9 @@ export default {
     datafiltered () {
       let data = this.data
       for (const f of this.filters) {
-        data = data.filter(d => f(d))
+        if (f.test instanceof Function) {
+          data = data.filter(obj => f.test(obj))
+        }
       }
       return data
     },
@@ -257,16 +262,13 @@ export default {
   },
   methods: {
     filter (col) {
-      const { label, field } = col
+      const { name, label, field } = col
       // The function valueOf allow us to get the value of field to be tested
       const valueOf = field instanceof Function ? field : obj => obj[field]
 
-      this.filterOf = [{
-        valueOf,
-        field: label,
-        type: undefined,
-        ref: undefined
-      }]
+      this.filtervalueof = valueOf
+      this.filterlabel = label
+      this.filtername = name
       this.editfilter = true
       // console.log(v, typeof v, v instanceof String, v instanceof Function, v instanceof Object)
     },
