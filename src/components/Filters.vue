@@ -50,7 +50,14 @@ const filtertypes = {
   NumericGreat: (v, ref) => +v > +ref,
   NumericLess: (v, ref) => +v < +ref,
   NumericEqual: (v, ref) => +v === +ref,
-  match: (v, re) => v.match(new RegExp(re))
+  match: (v, re) => {
+    try {
+      return v.match(new RegExp(re))
+    } catch (e) {
+      console.warn(e)
+      return true
+    }
+  }
 }
 
 // a filter is created from a test function, a valueOf function and one or more reference values
