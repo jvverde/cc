@@ -10,43 +10,61 @@
       row-key="symbol"
     >
       <template v-slot:top="props">
-        <div class="col-auto q-table__title">Last {{time()}} seconds of coins performance</div>
-        <q-space />
-        <q-checkbox indeterminate-value v-model="magnitude" label="Show magnitude" size="xs" color="green"/>
-        <q-space/>
-        <q-select
-          v-model="visibleColumns"
-          multiple
-          outlined
-          dense
-          options-dense
-          :display-value="$q.lang.table.columns"
-          emit-value
-          map-options
-          :options="columns"
-          option-value="name"
-          options-cover
-          style="min-width: 150px"
-        />
-        <q-space />
-        <span :class="difftime > 1000 ? 'red' : 'green'">{{ difftime / 1000 }}s</span>
-        <q-space />
-        <q-btn
-          flat round dense
-          :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
-          @click="props.toggleFullscreen"
-          class="q-ml-md"
-        />
+        <div class="row no-wrap q-gutter-md full-width">
+          <div>Last {{time()}} seconds of coins performance</div>
+          <span :class="difftime > 1000 ? 'red' : 'green'">{{ difftime / 1000 }}s</span>
+          <q-space />
+          <div class="q-gutter-xs">
+            <q-btn-dropdown dense outline no-caps label="Filters" icon="filter_list" >
+              <q-list>
+                <q-item clickable v-close-popup
+                  v-for="(col, index) in columns" :key="index"
+                  @click="filter(col)">
+                  <q-item-section>
+                    {{col.label}}
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+            <q-chip dense size="md" outline color="amber" square
+              clickable @click="editFilter(index)"
+              removable @remove="removeFilter(index)"
+              v-for="(filter, index) in filters" :key="index" :label="filter.label"
+            />
+          </div>
+          <q-space />
+          <q-checkbox indeterminate-value v-model="magnitude" label="Show magnitude" size="xs" color="green"/>
+          <q-select
+            v-model="visibleColumns"
+            multiple
+            outlined
+            dense
+            options-dense
+            display-value="Show Columns"
+            emit-value
+            map-options
+            :options="columns"
+            option-value="name"
+            options-cover
+            style="min-width: 150px"
+          />
+          <q-btn
+            flat round dense
+            :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+            @click="props.toggleFullscreen"
+            class="q-ml-md"
+          />
+        </div>
       </template>
 
-      <template v-slot:header-cell="props">
+      <!--template v-slot:header-cell="props">
         <q-th :props="props" class="nospace">
           <div class="column no-wrap items-start">
             <span>{{ props.col.label }}</span>
             <q-btn size="xs" flat rounded icon="filter_list" @click="filter(props.col)"/>
           </div>
         </q-th>
-      </template>
+      </template-->
 
       <template v-slot:body-cell-symbol="props">
         <q-td :props="props">
@@ -271,6 +289,16 @@ export default {
       this.filtername = name
       this.editfilter = true
       // console.log(v, typeof v, v instanceof String, v instanceof Function, v instanceof Object)
+    },
+    removeFilter (index) {
+      this.filters.splice(index, 1)
+    },
+    editFilter (index) {
+      const { valueOf, label, name } = this.filters[index]
+      this.filtervalueof = valueOf
+      this.filterlabel = label
+      this.filtername = name
+      this.editfilter = true
     },
     setSymbolTrends (s) {
       if (!this.pTrends[s]) {
