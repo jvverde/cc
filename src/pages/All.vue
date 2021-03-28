@@ -258,21 +258,11 @@ export default {
   methods: {
     filter (col) {
       const { label, field } = col
-      const g = field instanceof Function ? field : obj => {
-        console.log('g', obj, field)
-        return obj[field]
-      }
-      const filter = (cnd, ...refs) => obj => {
-        console.log('filter obj', obj)
-        console.log('filter cnd', cnd)
-        console.log('filter refs', refs)
-        console.log('filter g(obj)', g(obj))
-        console.log('filter cnd(g(obj), ...refs)', cnd(g(obj), ...refs))
-        return cnd(g(obj), ...refs)
-      }
-      console.log(label, field, g, filter)
+      // The function valueOf allow us to get the value of field to be tested
+      const valueOf = field instanceof Function ? field : obj => obj[field]
+
       this.filterOf = [{
-        filter,
+        valueOf,
         field: label,
         type: undefined,
         ref: undefined

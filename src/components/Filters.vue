@@ -28,16 +28,20 @@
 
 <script>
 
-const filtertypes = {
-  great: (v, ref) => v > ref,
-  less: (v, ref) => v < ref,
-  equal: (v, ref) => {
-    console.log(`equal(${v}, ${ref})`, v === ref)
-    return v === ref
-  },
-  match: (v, re) => v.match(re),
-  between: (v, ref1, ref2) => v > ref1 && v < ref2
+const val = v => {
+  return isNaN(v) ? v : +v
 }
+const filtertypes = {
+  great: (v, ref) => val(v) > val(ref),
+  less: (v, ref) => val(v) < val(ref),
+  equal: (v, ref) => val(v) === val(ref),
+  match: (v, re) => v.match(re),
+  between: (v, ref1, ref2) => val(v) > val(ref1) && val(v) < val(ref2)
+}
+
+// a filter is created from a test and one or more reference values
+const filter = (test, valueOf, ...refs) => obj => test(valueOf(obj), ...refs)
+
 export default {
   name: 'colorname',
   data () {
@@ -78,12 +82,14 @@ export default {
     changetype (type, index) {
       const ref = this.current[index].ref || ''
       const test = filtertypes[type]
-      this.current[index].test = this.current[index].filter(test, ref)
+      const valueOf = this.current[index].valueOf
+      this.current[index].test = filter(test, valueOf, ref)
       console.log(type, index, this.current)
     },
     changeref (ref, index) {
       const test = filtertypes[this.current[index].type] || (() => true)
-      this.current[index].test = this.current[index].filter(test, ref)
+      const valueOf = this.current[index].valueOf
+      this.current[index].test = filter(test, valueOf, ref)
       console.log(ref, index, this.current)
     }
   },
