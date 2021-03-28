@@ -3,7 +3,7 @@
     <q-table
       dense
       :title="`Coins performance since ${time()} seconds ago`"
-      :data="data"
+      :data="datafiltered"
       :columns="columns"
       :visibleColumns="visibleColumns"
       :rows-per-page-options="[10, 20, 30, 40, 50, 80, 0]"
@@ -29,7 +29,7 @@
           style="min-width: 150px"
         />
         <q-space />
-         <span :class="difftime > 1000 ? 'red' : 'green'">{{ difftime / 1000 }}s</span>
+        <span :class="difftime > 1000 ? 'red' : 'green'">{{ difftime / 1000 }}s</span>
         <q-space />
         <q-btn
           flat round dense
@@ -37,6 +37,15 @@
           @click="props.toggleFullscreen"
           class="q-ml-md"
         />
+      </template>
+
+      <template v-slot:header-cell="props">
+        <q-th :props="props" class="nospace">
+          <div class="column no-wrap items-start">
+            <span>{{ props.col.label }}</span>
+            <q-btn size="xs" flat rounded icon="filter_list" @click="filter(props.col)"/>
+          </div>
+        </q-th>
       </template>
 
       <template v-slot:body-cell-symbol="props">
@@ -48,7 +57,7 @@
         </q-td>
       </template>
 
-      <template v-slot:body-cell-price="props">
+      <!--template v-slot:body-cell-price="props">
         <q-td :props="props">
           <q-badge :color="getcolor(props.row.pTrend.direction)" :label="props.value" />
         </q-td>
@@ -80,12 +89,12 @@
 
       <template v-slot:body-cell-vema4="props">
         <q-td :props="props">
-          <!--span :class="`bg-${getcolor(props.row.emaTrends[4].direction)}`">{{ props.value }}</span-->
           <q-badge :color="getcolor(props.row.emaTrends[4].direction)" :label="`${props.value}%`" />
         </q-td>
-      </template>
+      </template-->
 
     </q-table>
+    <myfilter :model.sync="editfilter" :filters.sync="filterOf"/>
   </q-page>
 </template>
 
@@ -97,6 +106,7 @@ import { mapState } from 'vuex'
 import Tickers from 'src/helpers/Tickers'
 import Trend from 'src/helpers/Trend'
 import numeral from 'numeral'
+import myfilter from 'src/components/Filters'
 
 const positiveColors = [
   'light-green-6', 'light-green-7', 'light-green-8', 'light-green-9', 'light-green-10',
@@ -117,20 +127,26 @@ const getColor = n => {
 }
 
 const zeros = n => {
-  if (n <= 0) return '0'
-  else {
+  if (n > 0 && Math.abs(n) !== Infinity) {
     let s = '0.'
     while (n--) s = `${s}0`
     return s
   }
+  return '0'
 }
 
-const ndigit = (v, size = 0) => {
-  return numeral(v).format(zeros(size))
-}
+const ndigit = (v, size = 0) => numeral(v).format(zeros(size))
+
+const pdigit = (v, size = 0) => numeral(v).format('+' + zeros(size))
+
 const xdigit = (v) => {
-  const n = 6 - Math.floor(Math.log10(v))
+  const n = v ? 6 - Math.floor(Math.log10(v)) : 0
   return ndigit(v, n)
+}
+
+const ydigit = (v) => {
+  const n = v ? 1 - Math.floor(Math.log10(Math.abs(v))) : 0
+  return pdigit(v, n)
 }
 
 const plus = v => numeral(v).format('+0')
@@ -140,32 +156,37 @@ const columns = [
   { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true },
   { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true },
   { name: 'pTrenddir', label: 'Up', align: 'left', field: row => row.pTrend.direction, sortable: true, format: plus },
-  { name: 'pTrendmag', label: '‰Δ', align: 'left', field: row => row.pTrend.magnitude, sortable: true, format: v => ndigit(1000 * v, 3) },
+  { name: 'pTrendmag', label: '‰Δ', align: 'left', field: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v) },
+  { name: 'vema0', label: 'Δ(P/3s)%', align: 'right', field: row => row.vemas[0], sortable: true, format: v => ydigit(100 * v - 100) },
+  { name: 'vetrend0', label: 'Up', align: 'left', field: row => row.vemaTrends[0].direction, sortable: true, format: plus },
+  { name: 'vetrmag0', label: '‰Δ', align: 'left', field: row => row.vemaTrends[0].magnitude, sortable: true, format: v => ydigit(1000 * v) },
   { name: 'ema0', label: 'EMA(3s)', align: 'right', field: row => row.emas[0], sortable: true, format: v => xdigit(v) },
   { name: 'etrend0', label: 'Up', align: 'left', field: row => row.emaTrends[0].direction, sortable: true, format: plus },
-  { name: 'etrmag0', label: '‰Δ', align: 'left', field: row => row.emaTrends[0].magnitude, sortable: true, format: v => ndigit(1000 * v, 3) },
-  { name: 'vema0', label: 'Δ(P/3s)', align: 'right', field: row => row.vemas[0], sortable: true, format: v => ndigit(100 * v, 4) },
-  { name: 'vetrend0', label: 'Up', align: 'left', field: row => row.vemaTrends[0].direction, sortable: true, format: plus },
+  { name: 'etrmag0', label: '‰Δ', align: 'left', field: row => row.emaTrends[0].magnitude, sortable: true, format: v => ydigit(1000 * v) },
+  { name: 'vema1', label: 'Δ(3s/30s)%', align: 'right', field: row => row.vemas[1], sortable: true, format: v => ydigit(100 * v - 100) },
+  { name: 'vetrend1', label: 'Up', align: 'left', field: row => row.vemaTrends[1].direction, sortable: true, format: plus },
+  { name: 'vetrmag1', label: '‰Δ', align: 'left', field: row => row.vemaTrends[1].magnitude, sortable: true, format: v => ydigit(1000 * v) },
   { name: 'ema1', label: 'EMA(30s)', align: 'right', field: row => row.emas[1], sortable: true, format: v => xdigit(v) },
   { name: 'etrend1', label: 'Up', align: 'left', field: row => row.emaTrends[1].direction, sortable: true, format: plus },
-  { name: 'etrmag1', label: '‰Δ', align: 'left', field: row => row.emaTrends[1].magnitude, sortable: true, format: v => ndigit(1000 * v, 3) },
-  { name: 'vema1', label: 'Δ(3s/30s)', align: 'right', field: row => row.vemas[1], sortable: true, format: v => ndigit(100 * v, 2) },
-  { name: 'vetrend1', label: 'Up', align: 'left', field: row => row.vemaTrends[1].direction, sortable: true, format: plus },
+  { name: 'etrmag1', label: '‰Δ', align: 'left', field: row => row.emaTrends[1].magnitude, sortable: true, format: v => ydigit(1000 * v) },
+  { name: 'vema2', label: 'Δ(30s/5m)%', align: 'right', field: row => row.vemas[2], sortable: true, format: v => ydigit(100 * v - 100) },
+  { name: 'vetrend2', label: 'Up', align: 'left', field: row => row.vemaTrends[2].direction, sortable: true, format: plus },
+  { name: 'vetrmag2', label: '‰Δ', align: 'left', field: row => row.vemaTrends[2].magnitude, sortable: true, format: v => ydigit(1000 * v) },
   { name: 'ema2', label: 'EMA(5m)', align: 'right', field: row => row.emas[2], sortable: true, format: v => xdigit(v) },
   { name: 'etrend2', label: 'Up', align: 'left', field: row => row.emaTrends[2].direction, sortable: true, format: plus },
-  { name: 'etrmag2', label: '‰Δ', align: 'left', field: row => row.emaTrends[2].magnitude, sortable: true, format: v => ndigit(1000 * v, 3) },
-  { name: 'vema2', label: 'Δ(30s/5m)', align: 'right', field: row => row.vemas[2], sortable: true, format: v => ndigit(100 * v, 2) },
-  { name: 'vetrend2', label: 'Up', align: 'left', field: row => row.vemaTrends[2].direction, sortable: true, format: plus },
+  { name: 'etrmag2', label: '‰Δ', align: 'left', field: row => row.emaTrends[2].magnitude, sortable: true, format: v => ydigit(1000 * v) },
+  { name: 'vema3', label: 'Δ(5m/1h)%', align: 'right', field: row => row.vemas[3], sortable: true, format: v => ydigit(100 * v - 100) },
+  { name: 'vetrend3', label: 'Up', align: 'left', field: row => row.vemaTrends[3].direction, sortable: true, format: plus },
+  { name: 'vetrmag3', label: '‰Δ', align: 'left', field: row => row.vemaTrends[3].magnitude, sortable: true, format: v => ydigit(1000 * v) },
   { name: 'ema3', label: 'EMA(1h)', align: 'right', field: row => row.emas[3], sortable: true, format: v => xdigit(v) },
   { name: 'etrend3', label: 'Up', align: 'left', field: row => row.emaTrends[3].direction, sortable: true, format: plus },
-  { name: 'etrmag3', label: '‰Δ', align: 'left', field: row => row.emaTrends[3].magnitude, sortable: true, format: v => ndigit(1000 * v, 3) },
-  { name: 'vema3', label: 'Δ(5m/1h)', align: 'right', field: row => row.vemas[3], sortable: true, format: v => ndigit(100 * v, 2) },
-  { name: 'vetrend3', label: 'Up', align: 'left', field: row => row.vemaTrends[3].direction, sortable: true, format: plus },
+  { name: 'etrmag3', label: '‰Δ', align: 'left', field: row => row.emaTrends[3].magnitude, sortable: true, format: v => ydigit(1000 * v) },
+  { name: 'vema4', label: 'Δ(1h/4h)%', align: 'right', field: row => row.vemas[4], sortable: true, format: v => ydigit(100 * v - 100) },
+  { name: 'vetrend4', label: 'Up', align: 'left', field: row => row.vemaTrends[4].direction, sortable: true, format: plus },
+  { name: 'vetrmag4', label: '‰Δ', align: 'left', field: row => row.vemaTrends[4].magnitude, sortable: true, format: v => ydigit(1000 * v) },
   { name: 'ema4', label: 'EMA(4h)', align: 'right', field: row => row.emas[4], sortable: true, format: v => xdigit(v) },
   { name: 'etrend4', label: 'Up', align: 'left', field: row => row.emaTrends[4].direction, sortable: true, format: plus },
-  { name: 'etrmag4', label: '‰Δ', align: 'left', field: row => row.emaTrends[4].magnitude, sortable: true, format: v => ndigit(1000 * v, 3) },
-  { name: 'vema4', label: 'Δ(1h/4h)', align: 'right', field: row => row.vemas[4], sortable: true, format: v => ndigit(100 * v, 2) },
-  { name: 'vetrend4', label: 'Up', align: 'left', field: row => row.vemaTrends[4].direction, sortable: true, format: plus },
+  { name: 'etrmag4', label: '‰Δ', align: 'left', field: row => row.emaTrends[4].magnitude, sortable: true, format: v => ydigit(1000 * v) },
   { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
   { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', sortable: true, format: v => numeral(v).format('0,0') }
 ]
@@ -183,7 +204,10 @@ export default {
       tickers: {},
       events: {},
       columns,
-      visibleColumns: columns.map(c => c.name)
+      visibleColumns: columns.map(c => c.name),
+      filters: [],
+      filterOf: [],
+      editfilter: false
     }
   },
   computed: {
@@ -193,6 +217,13 @@ export default {
     },
     data () {
       return Object.values(this.tickers)
+    },
+    datafiltered () {
+      let data = this.data
+      for (const f of this.filters) {
+        data = data.filter(d => f(d))
+      }
+      return data
     },
     magcolumns () { return this.columns.filter(c => c.name.match(/mag\d?$/)).map(e => e.name) },
     magnitude: {
@@ -215,10 +246,40 @@ export default {
     }
   },
   components: {
+    myfilter
   },
   watch: {
+    editfilter (v) {
+      if (v === false && this.filterOf && this.filterOf[0] && this.filterOf[0].test instanceof Function) {
+        console.log('editfilter:', this.filterOf, this.filterOf[0].test({ price: 100 }))
+      }
+    }
   },
   methods: {
+    filter (col) {
+      const { label, field } = col
+      const g = field instanceof Function ? field : obj => {
+        console.log('g', obj, field)
+        return obj[field]
+      }
+      const filter = (cnd, ...refs) => obj => {
+        console.log('filter obj', obj)
+        console.log('filter cnd', cnd)
+        console.log('filter refs', refs)
+        console.log('filter g(obj)', g(obj))
+        console.log('filter cnd(g(obj), ...refs)', cnd(g(obj), ...refs))
+        return cnd(g(obj), ...refs)
+      }
+      console.log(label, field, g, filter)
+      this.filterOf = [{
+        filter,
+        field: label,
+        type: undefined,
+        ref: undefined
+      }]
+      this.editfilter = true
+      // console.log(v, typeof v, v instanceof String, v instanceof Function, v instanceof Object)
+    },
     setSymbolTrends (s) {
       if (!this.pTrends[s]) {
         this.pTrends[s] = new Trend()
@@ -277,5 +338,11 @@ export default {
   }
   .green {
     color: green;
+  }
+  .nospace {
+    * {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
   }
 </style>

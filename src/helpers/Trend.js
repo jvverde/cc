@@ -25,19 +25,22 @@ export default class Trend {
 
   pusha (v) {
     if (v === this._value) {
-      return this._cnt
+      return this
     } else if (v > this._value) {
       this._up(v)
     } else if (v < this._value) {
       this._down(v)
     }
     this._value = v
+    if (this.magnitude > 0 && this.direction < 0) {
+      console.log(this.magnitude, this.direction, this._first, this._value)
+    }
     return this
   }
 
   get direction () { return this._cnt }
 
   get magnitude () {
-    return (this._value - this._first) / this._first
+    return (this._value - this._first) / Math.abs(this._first)
   }
 }
