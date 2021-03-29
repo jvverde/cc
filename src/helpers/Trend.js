@@ -45,7 +45,7 @@ export default class Trend {
     return (this._value - this._first) / Math.abs(this._first)
   }
 
-  get ratio () {
+  get rate () {
     return this._end === this._start ? 0 : 1000 * this.magnitude / (this._end - this._start)
   }
 }
