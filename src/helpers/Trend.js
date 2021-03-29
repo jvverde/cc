@@ -3,38 +3,39 @@ export default class Trend {
     this._cnt = 0
     this._value = 0
     this._first = 0
+    this._start = this._end = 0
   }
 
-  _up (v) {
+  _up (v, time) {
     if (this._cnt > 0) {
       this._cnt++
     } else {
       this._cnt = 1
       this._first = v
+      this._start = time
     }
   }
 
-  _down (v) {
+  _down (v, time) {
     if (this._cnt < 0) {
       this._cnt--
     } else {
       this._cnt = -1
       this._first = v
+      this._start = time
     }
   }
 
-  pusha (v) {
+  pusha (v, time = Date.now()) {
     if (v === this._value) {
       return this
     } else if (v > this._value) {
-      this._up(v)
+      this._up(v, time)
     } else if (v < this._value) {
-      this._down(v)
+      this._down(v, time)
     }
     this._value = v
-    if (this.magnitude > 0 && this.direction < 0) {
-      console.log(this.magnitude, this.direction, this._first, this._value)
-    }
+    this._end = time
     return this
   }
 
@@ -42,5 +43,9 @@ export default class Trend {
 
   get magnitude () {
     return (this._value - this._first) / Math.abs(this._first)
+  }
+
+  get ratio () {
+    return this._end === this._start ? 0 : 1000 * this.magnitude / (this._end - this._start)
   }
 }

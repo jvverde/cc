@@ -200,7 +200,7 @@ export default {
     this.onresize()
     window.addEventListener('resize', this.onresize)
     const maverages = this.maverages
-    const { queue, candle } = subcribeEnqueueCandles(this.symbol, { maverages })
+    const { queue, candle } = subcribeEnqueueCandles(this.symbol, { maverages, minago: 240 })
     this.init([...queue])
     this.candle = candle
     this.handlerid = candle.addHandler(c => this.oncandle(c))
