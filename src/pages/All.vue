@@ -37,8 +37,15 @@
           <q-checkbox indeterminate-value v-model="ema" label="Show EMAs" size="xs" color="green"/>
           <q-checkbox indeterminate-value v-model="vema" label="Show EMAs Ratio" size="xs" color="green"/>
           <q-checkbox indeterminate-value v-model="trend" label="Show Trends" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="_3s" label="Show 3s values" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="_30s" label="Show 30s values" size="xs" color="green"/>
+          <!--q-checkbox indeterminate-value v-model="period(3)" label="Show 3s values" size="xs" color="green"/>
+          <q-checkbox indeterminate-value v-model="period(30)" label="Show 30s values" size="xs" color="green"/>
+          <q-checkbox indeterminate-value v-model="period(300)" label="Show 5m values" size="xs" color="green"/-->
+          <q-checkbox
+            v-for="(p, index) in periods" :key="`period${index}`"
+            v-model="p.val"
+            @input="v => shperiod(v, p)"
+            :label="`Show ${p.s} values`" size="xs" color="green"
+          />
           <q-select
             v-model="visibleColumns"
             multiple
@@ -125,6 +132,10 @@
 <script>
 // https://www.htmlsymbols.xyz/arrow-symbols
 // https://www.toptal.com/designers/htmlarrows/math/
+// import store from 'src/store'
+
+// console.log('store', store.getters())
+
 import { mapState } from 'vuex'
 
 import Tickers from 'src/helpers/Tickers'
@@ -176,54 +187,54 @@ const ydigit = (v) => {
 const plus = v => numeral(v).format('+0')
 
 const columns = [
-  { name: 'time', label: 'Time', align: 'left', field: 'time', sortable: true },
+  { name: 'time', label: 'Time', field: 'time', sortable: true },
   { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true },
   { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true },
-  { name: 'ptrend', label: 'Up(p)', align: 'left', field: row => row.pTrend.direction, sortable: true, format: plus },
-  { name: 'pmag', label: '‰Δ(p)', align: 'left', field: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'pratio', label: '‰Δ(p)/s', align: 'left', field: row => row.pTrend.ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vema0', label: 'P/3s', align: 'right', field: row => row.vemas[0], sortable: true, format: v => xdigit(v) },
-  { name: 'vetrend0', label: 'Up(P/3s)', align: 'left', field: row => row.vemaTrends[0].direction, sortable: true, format: plus },
-  { name: 'vetrmag0', label: '‰Δ(P/3s)', align: 'left', field: row => row.vemaTrends[0].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vetratio0', label: '‰Δ(P/3s)/s', align: 'left', field: row => row.vemaTrends[0].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'ema0', label: 'EMA(3s)', align: 'right', field: row => row.emas[0], sortable: true, format: v => xdigit(v) },
-  { name: 'etrend0', label: 'Up(3s)', align: 'left', field: row => row.emaTrends[0].direction, sortable: true, format: plus },
-  { name: 'etrmag0', label: '‰Δ(3s)', align: 'left', field: row => row.emaTrends[0].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'etratio0', label: '‰Δ(3s)/s', align: 'left', field: row => row.emaTrends[0].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vema1', label: '3s/30s', align: 'right', field: row => row.vemas[1], sortable: true, format: v => xdigit(v) },
-  { name: 'vetrend1', label: 'Up(3s/30s)', align: 'left', field: row => row.vemaTrends[1].direction, sortable: true, format: plus },
-  { name: 'vetrmag1', label: '‰Δ(3s/30s)', align: 'left', field: row => row.vemaTrends[1].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vetratio1', label: '‰Δ(3s/30s)/s', align: 'left', field: row => row.vemaTrends[1].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'ema1', label: 'EMA(30s)', align: 'right', field: row => row.emas[1], sortable: true, format: v => xdigit(v) },
-  { name: 'etrend1', label: 'Up(30s)', align: 'left', field: row => row.emaTrends[1].direction, sortable: true, format: plus },
-  { name: 'etrmag1', label: '‰Δ(30s)', align: 'left', field: row => row.emaTrends[1].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'etratio1', label: '‰Δ(30s)/s', align: 'left', field: row => row.emaTrends[1].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vema2', label: '30s/5m', align: 'right', field: row => row.vemas[2], sortable: true, format: v => xdigit(v) },
-  { name: 'vetrend2', label: 'Up(30s/5m)', align: 'left', field: row => row.vemaTrends[2].direction, sortable: true, format: plus },
-  { name: 'vetrmag2', label: '‰Δ(30s/5m)', align: 'left', field: row => row.vemaTrends[2].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vetratio2', label: '‰Δ(30s/5m)/s', align: 'left', field: row => row.vemaTrends[2].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'ema2', label: 'EMA(5m)', align: 'right', field: row => row.emas[2], sortable: true, format: v => xdigit(v) },
-  { name: 'etrend2', label: 'Up(5m)', align: 'left', field: row => row.emaTrends[2].direction, sortable: true, format: plus },
-  { name: 'etrmag2', label: '‰Δ(5m)', align: 'left', field: row => row.emaTrends[2].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'etratio2', label: '‰Δ(5m)/s', align: 'left', field: row => row.emaTrends[2].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vema3', label: '5m/1h', align: 'right', field: row => row.vemas[3], sortable: true, format: v => xdigit(v) },
-  { name: 'vetrend3', label: 'Up(5m/1h)', align: 'left', field: row => row.vemaTrends[3].direction, sortable: true, format: plus },
-  { name: 'vetrmag3', label: '‰Δ(5m/1h)', align: 'left', field: row => row.vemaTrends[3].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vetratio3', label: '‰Δ(5m/1h)/s', align: 'left', field: row => row.vemaTrends[3].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'ema3', label: 'EMA(1h)', align: 'right', field: row => row.emas[3], sortable: true, format: v => xdigit(v) },
-  { name: 'etrend3', label: 'Up(1h)', align: 'left', field: row => row.emaTrends[3].direction, sortable: true, format: plus },
-  { name: 'etrmag3', label: '‰Δ(1h)', align: 'left', field: row => row.emaTrends[3].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'etratio3', label: '‰Δ(1h)/s', align: 'left', field: row => row.emaTrends[3].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vema4', label: '1h/4h', align: 'right', field: row => row.vemas[4], sortable: true, format: v => ydigit(v) },
-  { name: 'vetrend4', label: 'Up(1h/4h)', align: 'left', field: row => row.vemaTrends[4].direction, sortable: true, format: plus },
-  { name: 'vetrmag4', label: '‰Δ(1h/4h)', align: 'left', field: row => row.vemaTrends[4].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'vetratio4', label: '‰Δ(1h/4h)/s', align: 'left', field: row => row.vemaTrends[4].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'ema4', label: 'EMA(4h)', align: 'right', field: row => row.emas[4], sortable: true, format: v => xdigit(v) },
-  { name: 'etrend4', label: 'Up(4h)', align: 'left', field: row => row.emaTrends[4].direction, sortable: true, format: plus },
-  { name: 'etrmag4', label: '‰Δ(4h)', align: 'left', field: row => row.emaTrends[4].magnitude, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'etratio4', label: '‰Δ(4h)/s', align: 'left', field: row => row.emaTrends[4].ratio, sortable: true, format: v => ydigit(1000 * v) },
-  { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
-  { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', sortable: true, format: v => numeral(v).format('0,0') }
+  { name: 'ptrend', label: 'Up(p)', field: row => row.pTrend.direction, format: plus },
+  { name: 'pmag', label: '‰Δ(p)', field: row => row.pTrend.magnitude, format: v => ydigit(1000 * v) },
+  { name: 'pratio', label: '‰Δ(p)/s', field: row => row.pTrend.ratio, format: v => ydigit(1000 * v) },
+  // { name: 'vema0', label: 'P/3s', align: 'right', field: row => row.vemas[0], format: v => xdigit(v) },
+  // { name: 'vetrend0', label: 'Up(P/3s)', field: row => row.vemaTrends[0].direction, format: plus },
+  // { name: 'vetrmag0', label: '‰Δ(P/3s)', field: row => row.vemaTrends[0].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'vetratio0', label: '‰Δ(P/3s)/s', field: row => row.vemaTrends[0].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'ema0', label: 'EMA(3s)', align: 'right', field: row => row.emas[0], format: v => xdigit(v) },
+  // { name: 'etrend0', label: 'Up(3s)', field: row => row.emaTrends[0].direction, format: plus },
+  // { name: 'etrmag0', label: '‰Δ(3s)', field: row => row.emaTrends[0].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'etratio0', label: '‰Δ(3s)/s', field: row => row.emaTrends[0].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'vema1', label: '3s/30s', align: 'right', field: row => row.vemas[1], format: v => xdigit(v) },
+  // { name: 'vetrend1', label: 'Up(3s/30s)', field: row => row.vemaTrends[1].direction, format: plus },
+  // { name: 'vetrmag1', label: '‰Δ(3s/30s)', field: row => row.vemaTrends[1].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'vetratio1', label: '‰Δ(3s/30s)/s', field: row => row.vemaTrends[1].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'ema1', label: 'EMA(30s)', align: 'right', field: row => row.emas[1], format: v => xdigit(v) },
+  // { name: 'etrend1', label: 'Up(30s)', field: row => row.emaTrends[1].direction, format: plus },
+  // { name: 'etrmag1', label: '‰Δ(30s)', field: row => row.emaTrends[1].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'etratio1', label: '‰Δ(30s)/s', field: row => row.emaTrends[1].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'vema2', label: '30s/5m', align: 'right', field: row => row.vemas[2], format: v => xdigit(v) },
+  // { name: 'vetrend2', label: 'Up(30s/5m)', field: row => row.vemaTrends[2].direction, format: plus },
+  // { name: 'vetrmag2', label: '‰Δ(30s/5m)', field: row => row.vemaTrends[2].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'vetratio2', label: '‰Δ(30s/5m)/s', field: row => row.vemaTrends[2].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'ema2', label: 'EMA(5m)', align: 'right', field: row => row.emas[2], format: v => xdigit(v) },
+  // { name: 'etrend2', label: 'Up(5m)', field: row => row.emaTrends[2].direction, format: plus },
+  // { name: 'etrmag2', label: '‰Δ(5m)', field: row => row.emaTrends[2].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'etratio2', label: '‰Δ(5m)/s', field: row => row.emaTrends[2].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'vema3', label: '5m/1h', align: 'right', field: row => row.vemas[3], format: v => xdigit(v) },
+  // { name: 'vetrend3', label: 'Up(5m/1h)', field: row => row.vemaTrends[3].direction, format: plus },
+  // { name: 'vetrmag3', label: '‰Δ(5m/1h)', field: row => row.vemaTrends[3].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'vetratio3', label: '‰Δ(5m/1h)/s', field: row => row.vemaTrends[3].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'ema3', label: 'EMA(1h)', align: 'right', field: row => row.emas[3], format: v => xdigit(v) },
+  // { name: 'etrend3', label: 'Up(1h)', field: row => row.emaTrends[3].direction, format: plus },
+  // { name: 'etrmag3', label: '‰Δ(1h)', field: row => row.emaTrends[3].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'etratio3', label: '‰Δ(1h)/s', field: row => row.emaTrends[3].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'vema4', label: '1h/4h', align: 'right', field: row => row.vemas[4], format: v => ydigit(v) },
+  // { name: 'vetrend4', label: 'Up(1h/4h)', field: row => row.vemaTrends[4].direction, format: plus },
+  // { name: 'vetrmag4', label: '‰Δ(1h/4h)', field: row => row.vemaTrends[4].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'vetratio4', label: '‰Δ(1h/4h)/s', field: row => row.vemaTrends[4].ratio, format: v => ydigit(1000 * v) },
+  // { name: 'ema4', label: 'EMA(4h)', align: 'right', field: row => row.emas[4], format: v => xdigit(v) },
+  // { name: 'etrend4', label: 'Up(4h)', field: row => row.emaTrends[4].direction, format: plus },
+  // { name: 'etrmag4', label: '‰Δ(4h)', field: row => row.emaTrends[4].magnitude, format: v => ydigit(1000 * v) },
+  // { name: 'etratio4', label: '‰Δ(4h)/s', field: row => row.emaTrends[4].ratio, format: v => ydigit(1000 * v) },
+  { name: 'volume', label: 'Volume', align: 'right', field: 'volume', format: v => numeral(v).format('0,0') },
+  { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', format: v => numeral(v).format('0,0') }
 ]
 export default {
   name: 'All',
@@ -238,7 +249,7 @@ export default {
       vemaTrends: [],
       tickers: {},
       events: {},
-      columns,
+      columns: [],
       visibleColumns: columns.map(c => c.name),
       filters: [],
       filterlabel: '',
@@ -289,8 +300,8 @@ export default {
       }
     },
     magnitude: {
-      get () { return this.isAllVisible(/mag\d?$/) },
-      set (v) { this.setAllVisible(v, /mag\d?$/) }
+      get () { return this.isAllVisible(/mag\d*$/) },
+      set (v) { this.setAllVisible(v, /mag\d*$/) }
     },
     ema: {
       get () { return this.isAllVisible(/^ema\d/) },
@@ -301,16 +312,11 @@ export default {
       set (v) { this.setAllVisible(v, /^vema\d/) }
     },
     trend: {
-      get () { return this.isAllVisible(/trend\d?$/) },
-      set (v) { this.setAllVisible(v, /trend\d?$/) }
+      get () { return this.isAllVisible(/trend\d*$/) },
+      set (v) { this.setAllVisible(v, /trend\d*$/) }
     },
-    _3s: {
-      get () { return this.isAllVisible(/0$/) },
-      set (v) { this.setAllVisible(v, /0$/) }
-    },
-    _30s: {
-      get () { return this.isAllVisible(/1$/) },
-      set (v) { this.setAllVisible(v, /1$/) }
+    periods () {
+      return this.maverages.map(i => ({ i, s: totime(i) }))
     }
   },
   components: {
@@ -324,6 +330,11 @@ export default {
     }
   },
   methods: {
+    shperiod (v, p) { // Show/Hide period stats
+      const re = new RegExp(`[^0-9]${p.i}$`)
+      console.log(v, p, re)
+      this.setAllVisible(v, re)
+    },
     filter (col) {
       const { name, label, field } = col
       // The function valueOf allow us to get the value of field to be tested
@@ -394,7 +405,37 @@ export default {
     this.vemaTrends = maverages.map(e => ({}))
     const handler = t => this.onticker(t)
     this.tickersObj = new Tickers({ maverages, handler, match: /(?<!DOWN|UP)USDT$/ })
+    const dynamicols = []
+    const [sortable, align] = [true, 'left']
+    let p = 'P'
+    for (const i of maverages) {
+      const t = totime(i)
+      const cols = [
+        { name: `vema${i}`, label: `${p}/${t}`, align: 'right', field: row => row.vemas[0], format: v => xdigit(v) },
+        { name: `vetrend${i}`, label: `Up(${p}/${t})`, field: row => row.vemaTrends[0].direction, format: plus },
+        { name: `vetrmag${i}`, label: `‰Δ(${p}/${t})`, field: row => row.vemaTrends[0].magnitude, format: v => ydigit(1000 * v) },
+        { name: `vetratio${i}`, label: `‰Δ(${p}/${t})/s`, field: row => row.vemaTrends[0].ratio, format: v => ydigit(1000 * v) },
+        { name: `ema${i}`, label: `EMA(${t})`, align: 'right', field: row => row.emas[0], format: v => xdigit(v) },
+        { name: `etrend${i}`, label: `Up(${t})`, field: row => row.emaTrends[0].direction, format: plus },
+        { name: `etrmag${i}`, label: `‰Δ(${t})`, field: row => row.emaTrends[0].magnitude, format: v => ydigit(1000 * v) },
+        { name: `etratio${i}`, label: `‰Δ(${t})/s`, field: row => row.emaTrends[0].ratio, format: v => ydigit(1000 * v) }
+      ].map(c => ({ align, sortable, ...c }))
+      dynamicols.push(...cols)
+      p = t
+    }
+    columns.splice(-2, 0, ...dynamicols)
+    this.columns = columns
+    this.visibleColumns = columns.map(c => c.name)
   }
+}
+const totime = t => {
+  if (t < 60) return `${t}s`
+  t = 0 | t / 60
+  if (t < 60) return `${t}m`
+  t = 0 | t / 60
+  if (t < 24) return `${t}h`
+  t = 0 | t / 24
+  return `${t}d`
 }
 </script>
 <style lang="scss">
