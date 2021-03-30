@@ -51,7 +51,7 @@
             v-for="(p, index) in periods" :key="`period${index}`"
             v-model="p.val"
             @input="v => shperiod(v, p)"
-            :label="`Period ${p.s}`" size="xs" color="green"
+            :label="`P(${p.s})`" size="xs" color="green"
           />
           <q-select
             v-model="visibleColumns"
@@ -194,16 +194,16 @@ const ydigit = (v) => {
 const plus = v => numeral(v).format('+0')
 
 const columns = [
-  { name: 'time', label: 'Time', field: 'time', sortable: true },
-  { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true },
+  { name: 'time', label: 'Time', field: 'time', sortable: true, classes: 'time' },
+  { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true, classes: 'symbol' },
   { name: 'frequency', required: true, label: 'Freq.', align: 'right', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
-  { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true },
-  { name: 'ptrend', label: '[⇅(P)]', field: row => row.pTrend.direction, format: plus },
-  { name: 'pmag', label: '[P%]', field: row => row.pTrend.magnitude, format: v => ydigit(1000 * v) },
-  { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, format: v => ydigit(1000 * v) },
-  { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, format: v => ydigit(1000 * v) },
-  { name: 'volume', label: 'Volume', align: 'right', field: 'volume', format: v => numeral(v).format('0,0') },
-  { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', format: v => numeral(v).format('0,0') }
+  { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true, classes: 'price' },
+  { name: 'ptrend', label: '[⇅(P)]', field: row => row.pTrend.direction, sortable: true, format: plus },
+  { name: 'pmag', label: '[P‰]', field: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+  // { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+  { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+  { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
+  { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', sortable: true, format: v => numeral(v).format('0,0') }
 ]
 
 export default {
@@ -385,13 +385,13 @@ export default {
         const cols = [
           { name: `vema${j}`, label: `${p}/${t}`, align: 'right', field: row => row.vemas[i], format: v => xdigit(v) },
           { name: `vtrend${j}`, label: `[⇅(${p}/${t})]`, field: row => row.vemaTrends[i].direction, format: plus },
-          { name: `vtrmag${j}`, label: `[(${p}/${t})‰]`, field: row => row.vemaTrends[i].magnitude, format: v => ydigit(1000 * v) },
-          { name: `vtrate${j}`, label: `[(${p}/${t})‰/s]`, field: row => row.vemaTrends[i].rate, format: v => ydigit(1000 * v) },
+          { name: `vtrmag${j}`, label: `[(${p}/${t})‰]`, field: row => row.vemaTrends[i].magnitude, format: v => ydigit(1000 * v), classes: 'permil' },
+          { name: `vtrate${j}`, label: `[(${p}/${t})‰/s]`, field: row => row.vemaTrends[i].rate, format: v => ydigit(1000 * v), classes: 'permil' },
           { name: `vtdura${j}`, label: `[Δt(${p}/${t})s]`, field: row => row.vemaTrends[i].duration, format: s => s / 1000 },
           { name: `ema${j}`, label: `EMA(${t})`, align: 'right', field: row => row.emas[i], format: v => xdigit(v) },
           { name: `etrend${j}`, label: `[⇅(${t})]`, field: row => row.emaTrends[i].direction, format: plus },
-          { name: `etrmag${j}`, label: `[${t}‰]`, field: row => row.emaTrends[i].magnitude, format: v => ydigit(1000 * v) },
-          { name: `etrate${j}`, label: `[${t}‰/s]`, field: row => row.emaTrends[i].rate, format: v => ydigit(1000 * v) },
+          { name: `etrmag${j}`, label: `[${t}‰]`, field: row => row.emaTrends[i].magnitude, format: v => ydigit(1000 * v), classes: 'permil' },
+          { name: `etrate${j}`, label: `[${t}‰/s]`, field: row => row.emaTrends[i].rate, format: v => ydigit(1000 * v), classes: 'permil' },
           { name: `etdura${j}`, label: `[Δt(${t})s]`, field: row => row.emaTrends[i].duration, format: s => s / 1000 }
         ].map(c => ({ align, sortable, ...c }))
         dynamicols.push(...cols)
@@ -433,5 +433,21 @@ const totime = t => {
       padding: 0 !important;
       margin: 0 !important;
     }
+  }
+  .price {
+    max-width:6em;
+    min-width:6em;
+  }
+  .symbol {
+    max-width:6em;
+    min-width:6em;
+  }
+  .time {
+    max-width:4em;
+    min-width:4em;
+  }
+  .permil {
+    max-width:4em;
+    min-width:4em;
   }
 </style>
