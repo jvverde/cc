@@ -43,6 +43,7 @@
           </q-checkbox>
           <q-checkbox indeterminate-value v-model="trend" label="Trends" size="xs" color="green"/>
           <q-checkbox indeterminate-value v-model="rate" label="Rate" size="xs" color="green"/>
+          <q-checkbox indeterminate-value v-model="dura" label="Duration" size="xs" color="green"/>
           <!--q-checkbox indeterminate-value v-model="period(3)" label="Show 3s values" size="xs" color="green"/>
           <q-checkbox indeterminate-value v-model="period(30)" label="Show 30s values" size="xs" color="green"/>
           <q-checkbox indeterminate-value v-model="period(300)" label="Show 5m values" size="xs" color="green"/-->
@@ -195,21 +196,23 @@ const plus = v => numeral(v).format('+0')
 const columns = [
   { name: 'time', label: 'Time', field: 'time', sortable: true },
   { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true },
+  { name: 'frequency', required: true, label: 'Freq.', align: 'right', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
   { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true },
-  { name: 'ptrend', label: 'Up(p)', field: row => row.pTrend.direction, format: plus },
-  { name: 'pmag', label: '‰Δ(p)', field: row => row.pTrend.magnitude, format: v => ydigit(1000 * v) },
-  { name: 'prate', label: '‰Δ(p)/s', field: row => row.pTrend.rate, format: v => ydigit(1000 * v) },
+  { name: 'ptrend', label: '[⇅(P)]', field: row => row.pTrend.direction, format: plus },
+  { name: 'pmag', label: '[P%]', field: row => row.pTrend.magnitude, format: v => ydigit(1000 * v) },
+  { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, format: v => ydigit(1000 * v) },
+  { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, format: v => ydigit(1000 * v) },
   { name: 'volume', label: 'Volume', align: 'right', field: 'volume', format: v => numeral(v).format('0,0') },
   { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', format: v => numeral(v).format('0,0') }
 ]
+
 export default {
   name: 'All',
   data () {
     return {
       start: Date.now(),
       difftime: 0,
-      remember: 10,
-      tickersObj: null,
+      tickersProducer: null,
       pTrends: {},
       emaTrends: [],
       vemaTrends: [],
@@ -266,12 +269,12 @@ export default {
       }
     },
     ema: {
-      get () { return this.isAllVisible(/^ema\d+$/i) },
-      set (v) { this.setAllVisible(v, /^ema\d+$/i) }
+      get () { return this.isAllVisible(/^ema\d+$/) },
+      set (v) { this.setAllVisible(v, /^ema\d+$/) }
     },
     vema: {
-      get () { return this.isAllVisible(/^v/i) },
-      set (v) { this.setAllVisible(v, /^v/i) }
+      get () { return this.isAllVisible(/^v(?!olume)/) },
+      set (v) { this.setAllVisible(v, /^v(?!olume)/) }
     },
     vemaValues: {
       get () { return this.isAllVisible(/^vema\d+$/) },
@@ -288,6 +291,10 @@ export default {
     rate: {
       get () { return this.isAllVisible(/rate\d*$/) },
       set (v) { this.setAllVisible(v, /rate\d*$/) }
+    },
+    dura: {
+      get () { return this.isAllVisible(/dura\d*$/) },
+      set (v) { this.setAllVisible(v, /dura\d*$/) }
     },
     periods () {
       return this.maverages.map(i => ({ i, s: totime(i), val: true }))
@@ -331,22 +338,24 @@ export default {
     },
     setSymbolTrends (s) {
       if (!this.pTrends[s]) {
-        this.pTrends[s] = new Trend()
+        const maverages = this.maverages
+        this.pTrends[s] = new Trend(maverages)
         this.emaTrends.forEach(t => {
-          t[s] = new Trend()
+          t[s] = new Trend(maverages)
         })
         this.vemaTrends.forEach(t => {
-          t[s] = new Trend()
+          t[s] = new Trend(maverages)
         })
       }
     },
     onticker (t) {
       const s = t.s
       this.setSymbolTrends(s)
-      const start = Date.now()
-      this.difftime = start - t.time
+      const now = Date.now()
+      this.difftime = now - t.time
 
       this.events[s] = 1 + (this.events[s] || 0)
+      const frequency = 1000 * this.events[s] / (now - this.start)
 
       const pTrend = this.pTrends[s]
       pTrend.pusha(t.price)
@@ -360,16 +369,37 @@ export default {
       const vemaTrends = this.maverages.map((v, index) => this.vemaTrends[index][s].pusha(vemas[index]))
 
       const time = new Date(t.time).toLocaleTimeString()
-      this.$set(this.tickers, s, { ...t, pTrend, time, vemas, emaTrends, vemaTrends })
-    },
-    numeral (v, size = 0) {
-      return numeral(v).format(zeros(size))
-    },
-    expo (v, size) {
-      return numeral(v).format('+0.0e+0')
+      this.$set(this.tickers, s, { ...t, pTrend, time, vemas, emaTrends, vemaTrends, frequency })
     },
     getcolor (n) {
       return getColor(n)
+    },
+    initColumns () {
+      const maverages = this.maverages
+      const dynamicols = []
+      const [sortable, align] = [true, 'left']
+      let p = 'P'
+      for (const i in maverages) {
+        const j = maverages[i]
+        const t = totime(j)
+        const cols = [
+          { name: `vema${j}`, label: `${p}/${t}`, align: 'right', field: row => row.vemas[i], format: v => xdigit(v) },
+          { name: `vtrend${j}`, label: `[⇅(${p}/${t})]`, field: row => row.vemaTrends[i].direction, format: plus },
+          { name: `vtrmag${j}`, label: `[(${p}/${t})‰]`, field: row => row.vemaTrends[i].magnitude, format: v => ydigit(1000 * v) },
+          { name: `vtrate${j}`, label: `[(${p}/${t})‰/s]`, field: row => row.vemaTrends[i].rate, format: v => ydigit(1000 * v) },
+          { name: `vtdura${j}`, label: `[Δt(${p}/${t})s]`, field: row => row.vemaTrends[i].duration, format: s => s / 1000 },
+          { name: `ema${j}`, label: `EMA(${t})`, align: 'right', field: row => row.emas[i], format: v => xdigit(v) },
+          { name: `etrend${j}`, label: `[⇅(${t})]`, field: row => row.emaTrends[i].direction, format: plus },
+          { name: `etrmag${j}`, label: `[${t}‰]`, field: row => row.emaTrends[i].magnitude, format: v => ydigit(1000 * v) },
+          { name: `etrate${j}`, label: `[${t}‰/s]`, field: row => row.emaTrends[i].rate, format: v => ydigit(1000 * v) },
+          { name: `etdura${j}`, label: `[Δt(${t})s]`, field: row => row.emaTrends[i].duration, format: s => s / 1000 }
+        ].map(c => ({ align, sortable, ...c }))
+        dynamicols.push(...cols)
+        p = t
+      }
+      columns.splice(-2, 0, ...dynamicols)
+      this.columns = columns
+      this.visibleColumns = columns.map(c => c.name)
     }
   },
   mounted () {
@@ -377,28 +407,8 @@ export default {
     this.emaTrends = maverages.map(e => ({}))
     this.vemaTrends = maverages.map(e => ({}))
     const handler = t => this.onticker(t)
-    this.tickersObj = new Tickers({ maverages, handler, match: /(?<!DOWN|UP)USDT$/ })
-    const dynamicols = []
-    const [sortable, align] = [true, 'left']
-    let p = 'P'
-    for (const i of maverages) {
-      const t = totime(i)
-      const cols = [
-        { name: `vema${i}`, label: `${p}/${t}`, align: 'right', field: row => row.vemas[0], format: v => xdigit(v) },
-        { name: `vtrend${i}`, label: `Up(${p}/${t})`, field: row => row.vemaTrends[0].direction, format: plus },
-        { name: `vtrmag${i}`, label: `‰Δ(${p}/${t})`, field: row => row.vemaTrends[0].magnitude, format: v => ydigit(1000 * v) },
-        { name: `vtrate${i}`, label: `‰Δ(${p}/${t})/s`, field: row => row.vemaTrends[0].rate, format: v => ydigit(1000 * v) },
-        { name: `ema${i}`, label: `EMA(${t})`, align: 'right', field: row => row.emas[0], format: v => xdigit(v) },
-        { name: `etrend${i}`, label: `Up(${t})`, field: row => row.emaTrends[0].direction, format: plus },
-        { name: `etrmag${i}`, label: `‰Δ(${t})`, field: row => row.emaTrends[0].magnitude, format: v => ydigit(1000 * v) },
-        { name: `etrate${i}`, label: `‰Δ(${t})/s`, field: row => row.emaTrends[0].rate, format: v => ydigit(1000 * v) }
-      ].map(c => ({ align, sortable, ...c }))
-      dynamicols.push(...cols)
-      p = t
-    }
-    columns.splice(-2, 0, ...dynamicols)
-    this.columns = columns
-    this.visibleColumns = columns.map(c => c.name)
+    this.tickersProducer = new Tickers({ maverages, handler, match: /(?<!DOWN|UP)USDT$/ })
+    this.initColumns()
   }
 }
 const totime = t => {

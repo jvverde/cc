@@ -1,15 +1,30 @@
+import { EMA } from './MovingAverage'
+
 export default class Trend {
-  constructor () {
+  constructor (maverages = []) {
     this._cnt = 0
     this._value = 0
     this._first = 0
     this._start = this._end = 0
+    this._emas = maverages.length !== 0
+    this._emaOfDire = maverages.map(e => new EMA(e))
+    this._emaOfMagn = maverages.map(e => new EMA(e))
+    this._emaOfRate = maverages.map(e => new EMA(e))
+    this._emaOfDura = maverages.map(e => new EMA(e))
+  }
+
+  _updateEmas () {
+    this._emaOfDire.map(e => e.update(this.direction))
+    this._emaOfMagn.map(e => e.update(this.magnitude))
+    this._emaOfRate.map(e => e.update(this.rate))
+    this._emaOfDura.map(e => e.update(this.duration))
   }
 
   _up (v, time) {
     if (this._cnt > 0) {
       this._cnt++
     } else {
+      if (this._emas && this._cnt !== 0) this._updateEmas()
       this._cnt = 1
       this._first = v
       this._start = time
@@ -20,6 +35,7 @@ export default class Trend {
     if (this._cnt < 0) {
       this._cnt--
     } else {
+      if (this._emas && this._cnt !== 0) this._updateEmas()
       this._cnt = -1
       this._first = v
       this._start = time
@@ -46,6 +62,17 @@ export default class Trend {
   }
 
   get rate () {
-    return this._end === this._start ? 0 : 1000 * this.magnitude / (this._end - this._start)
+    return this._end === this._start ? 0 : 1000 * this.magnitude / this.duration
+  }
+
+  get duration () { return this._end - this._start }
+
+  get emas () {
+    return this._emas ? {
+      direction: this._emaOfDire.value,
+      magnitude: this._emaOfMagn.value,
+      rate: this._emaOfRate.value,
+      duration: this._emaOfDure.value
+    } : undefined
   }
 }
