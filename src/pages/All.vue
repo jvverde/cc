@@ -1,6 +1,6 @@
 <template>
   <q-page>
-    <q-table
+    <q-table class="tforce1 tforce2 tforce3"
       dense
       :title="`Coins performance since ${time()} seconds ago`"
       :data="filteredData"
@@ -10,7 +10,7 @@
       row-key="symbol"
     >
       <template v-slot:top="props">
-        <div class="row no-wrap q-gutter-md full-width">
+        <div class="row no-wrap q-gutter-md full-width top items-start">
           <div>Last {{time()}} seconds of coins performance</div>
           <span :class="difftime > 1000 ? 'red' : 'green'">{{ difftime / 1000 }}s</span>
           <q-space />
@@ -33,26 +33,25 @@
             />
           </div>
           <q-space />
-          <q-checkbox indeterminate-value v-model="magnitude" label="Magnitude" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="ema" label="EMA" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="vema" size="xs" color="green">
-            <q-badge color="transparent">EMA(p)</q-badge>/<q-badge color="transparent">EMA(p-1)</q-badge>
-          </q-checkbox>
-          <q-checkbox indeterminate-value v-model="vemaValues" size="xs" color="green">
-            <q-badge color="transparent">Values EMA(p)</q-badge>/<q-badge color="transparent">EMA(p-1)</q-badge>
-          </q-checkbox>
-          <q-checkbox indeterminate-value v-model="trend" label="Trends" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="rate" label="Rate" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="dura" label="Duration" size="xs" color="green"/>
-          <!--q-checkbox indeterminate-value v-model="period(3)" label="Show 3s values" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="period(30)" label="Show 30s values" size="xs" color="green"/>
-          <q-checkbox indeterminate-value v-model="period(300)" label="Show 5m values" size="xs" color="green"/-->
-          <q-checkbox
-            v-for="(p, index) in periods" :key="`period${index}`"
-            v-model="p.val"
-            @input="v => shperiod(v, p)"
-            :label="`P(${p.s})`" size="xs" color="green"
-          />
+          <div class="row wrap q-gutter-xs">
+            <q-checkbox indeterminate-value v-model="ema" label="EMA" size="xs" color="green"/>
+            <q-checkbox indeterminate-value v-model="vema" size="xs" color="green">
+              <q-badge color="transparent">EMA(p)</q-badge>/<q-badge color="transparent">EMA(p-1)</q-badge>
+            </q-checkbox>
+            <q-checkbox indeterminate-value v-model="vemaValues" size="xs" color="green">
+              <q-badge color="transparent">Values EMA(p)</q-badge>/<q-badge color="transparent">EMA(p-1)</q-badge>
+            </q-checkbox>
+            <q-checkbox indeterminate-value v-model="trend" label="Trends" size="xs" color="green"/>
+            <q-checkbox indeterminate-value v-model="magnitude" label="Magnitude" size="xs" color="green"/>
+            <q-checkbox indeterminate-value v-model="dura" label="Duration" size="xs" color="green"/>
+            <q-checkbox indeterminate-value v-model="rate" label="Rate" size="xs" color="green"/>
+            <q-checkbox
+              v-for="(p, index) in periods" :key="`period${index}`"
+              v-model="p.val"
+              @input="v => shperiod(v, p)"
+              :label="`P(${p.s})`" size="xs" color="green"
+            />
+          </div>
           <q-select
             v-model="visibleColumns"
             multiple
@@ -87,10 +86,11 @@
 
       <template v-slot:body-cell-symbol="props">
         <q-td :props="props">
-          {{ props.value }}
-          <q-btn icon="launch" color="green-5" round size="xs" flat
+          <q-btn color="green-5" rounded size="sm" flat
             :to="{ name: 'coin', params: { symbol: props.value } }"
-          />
+          >
+            {{ props.value }}
+          </q-btn>
         </q-td>
       </template>
 
@@ -150,6 +150,21 @@ import Trend from 'src/helpers/Trend'
 import numeral from 'numeral'
 import myfilter from 'src/components/Filters'
 
+const dhms = t => {
+  if (t < 60) return `${0 | t}s`
+  const s = 0 | t % 60
+  t = 0 | t / 60
+  if (t < 60) return `${t}m${s}s`
+  const m = 0 | t % 60
+  t = 0 | t / 60
+  if (t < 24) return `${t}h${m}m${s}s`
+  const h = 0 | t % 24
+  t = 0 | t / 24
+  return `${t}d${h}h${m}m${s}s`
+}
+
+const totime = t => dhms(t).replace(/m0s$/, 'm').replace(/h0m$/, 'h').replace(/d0h$/, 'd')
+
 const positiveColors = [
   'light-green-6', 'light-green-7', 'light-green-8', 'light-green-9', 'light-green-10',
   'green-6', 'green-7', 'green-8', 'green-9', 'green-10'
@@ -198,10 +213,10 @@ const columns = [
   { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true, classes: 'symbol' },
   { name: 'frequency', required: true, label: 'Freq.', align: 'right', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
   { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true, classes: 'price' },
-  { name: 'ptrend', label: '[⇅(P)]', field: row => row.pTrend.direction, sortable: true, format: plus },
+  { name: 'ptrend', label: '[⇅(P)]', align: 'center', field: row => row.pTrend.direction, sortable: true, format: plus },
   { name: 'pmag', label: '[P‰]', field: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
   // { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
-  { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+  // { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
   { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
   { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', sortable: true, format: v => numeral(v).format('0,0') }
 ]
@@ -384,15 +399,15 @@ export default {
         const t = totime(j)
         const cols = [
           { name: `vema${j}`, label: `${p}/${t}`, align: 'right', field: row => row.vemas[i], format: v => xdigit(v) },
-          { name: `vtrend${j}`, label: `[⇅(${p}/${t})]`, field: row => row.vemaTrends[i].direction, format: plus },
+          { name: `vtrend${j}`, label: `[⇅(${p}/${t})]`, align: 'center', field: row => row.vemaTrends[i].direction, format: plus },
           { name: `vtrmag${j}`, label: `[(${p}/${t})‰]`, field: row => row.vemaTrends[i].magnitude, format: v => ydigit(1000 * v), classes: 'permil' },
+          { name: `vtdura${j}`, label: `[Δt(${p}/${t})]`, field: row => row.vemaTrends[i].duration, format: s => dhms(s / 1000) },
           { name: `vtrate${j}`, label: `[(${p}/${t})‰/s]`, field: row => row.vemaTrends[i].rate, format: v => ydigit(1000 * v), classes: 'permil' },
-          { name: `vtdura${j}`, label: `[Δt(${p}/${t})s]`, field: row => row.vemaTrends[i].duration, format: s => s / 1000 },
           { name: `ema${j}`, label: `EMA(${t})`, align: 'right', field: row => row.emas[i], format: v => xdigit(v) },
-          { name: `etrend${j}`, label: `[⇅(${t})]`, field: row => row.emaTrends[i].direction, format: plus },
+          { name: `etrend${j}`, label: `[⇅(${t})]`, align: 'center', field: row => row.emaTrends[i].direction, format: plus },
           { name: `etrmag${j}`, label: `[${t}‰]`, field: row => row.emaTrends[i].magnitude, format: v => ydigit(1000 * v), classes: 'permil' },
-          { name: `etrate${j}`, label: `[${t}‰/s]`, field: row => row.emaTrends[i].rate, format: v => ydigit(1000 * v), classes: 'permil' },
-          { name: `etdura${j}`, label: `[Δt(${t})s]`, field: row => row.emaTrends[i].duration, format: s => s / 1000 }
+          { name: `etdura${j}`, label: `[Δt(${t})]`, field: row => row.emaTrends[i].duration, format: s => dhms(s / 1000) },
+          { name: `etrate${j}`, label: `[${t}‰/s]`, field: row => row.emaTrends[i].rate, format: v => ydigit(1000 * v), classes: 'permil' }
         ].map(c => ({ align, sortable, ...c }))
         dynamicols.push(...cols)
         p = t
@@ -411,15 +426,7 @@ export default {
     this.initColumns()
   }
 }
-const totime = t => {
-  if (t < 60) return `${t}s`
-  t = 0 | t / 60
-  if (t < 60) return `${t}m`
-  t = 0 | t / 60
-  if (t < 24) return `${t}h`
-  t = 0 | t / 24
-  return `${t}d`
-}
+
 </script>
 <style lang="scss">
   .red {
@@ -439,15 +446,24 @@ const totime = t => {
     min-width:6em;
   }
   .symbol {
-    max-width:6em;
-    min-width:6em;
+    max-width:4em;
+    min-width:4em;
   }
   .time {
     max-width:4em;
     min-width:4em;
   }
   .permil {
-    max-width:4em;
-    min-width:4em;
+    max-width:3em;
+    min-width:3em;
+  }
+  .tforce1.tforce2.tforce3 {
+    td, th {
+      font-size: 11px;
+      padding: 4px;
+    }
+    .top {
+      font-size: 11px;
+    }
   }
 </style>
