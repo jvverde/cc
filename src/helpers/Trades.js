@@ -5,10 +5,12 @@ import { EMA } from './MovingAverage'
 
 import { AVERAGES } from 'src/config'
 // const AVERAGES = [30, 100, 300, 1e3, 1e4, 1e5, 1e6]
+import { getNewId } from 'src/helpers/Utils'
 
 export default class Trades {
-  constructor (symbol, { maverages = AVERAGES, minago = 60 } = {}) {
-    this.ontrade = []
+  constructor (symbol, { handler = () => null, maverages = AVERAGES, minago = 60 } = {}) {
+    const id = getNewId()
+    this.ontrade = [{ id, handler }]
     // this.mas = maverages.map(v => new MA(v))
     this.emas = maverages.map(v => new EMA(v))
     this.streamid = this._init(symbol, minago)
@@ -49,6 +51,7 @@ export default class Trades {
   removeConsumer (id) {
     const index = this.ontrade.findIndex(e => e.id === id)
     if (index >= 0) this.ontrade.splice(index, 1)
+    if (this.ontrade.length === 0) this.dismiss()
   }
 
   async dismiss () {
@@ -69,6 +72,7 @@ export function subcribeTrades (symbol, options = {}) {
 
 export function removeTrades (symbol) {
   if (_trades[symbol]) {
+    _trades[symbol].dismiss()
     delete _trades[symbol]
   }
 }

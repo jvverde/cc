@@ -85,27 +85,6 @@ export function disconnect (reason = 'byuser') {
   endpoint.close(reason)
 }
 
-function install (stream, handler) {
-  const id = new Date().getTime() + '_' + Math.random()
-  if (!handlersbystream[stream]) {
-    handlersbystream[stream] = [{ id, handler }]
-    console.log('Installed first handler for stream', stream)
-  } else handlersbystream[stream].push({ id, handler })
-  return id
-}
-
-function uninstall (id) {
-  for (const [stream, handlers] of Object.entries(handlersbystream)) {
-    const index = handlers.findIndex(e => e.id === id)
-    if (index >= 0) {
-      if (handlers.length === 1) delete handlersbystream[stream]
-      else handlers.splice(index, 1)
-      return stream
-    }
-  }
-  return false
-}
-
 export async function send (data) {
   await connectedPromise
   return limiter.schedule(() => {
@@ -133,8 +112,8 @@ export function list () {
 }
 
 export async function subscribe (...names) {
-  const subscribed = await list()
-  const streams = names.filter(name => !subscribed.includes(name))
+  const current = await list()
+  const streams = names.filter(name => !current.includes(name))
   if (streams.length === 0) return Promise.resolve(0)
   return _request({
     method: 'SUBSCRIBE',
@@ -143,8 +122,8 @@ export async function subscribe (...names) {
 }
 
 export async function unsubscribe (...names) {
-  const subscribed = await list()
-  const streams = names.filter(name => subscribed.includes(name))
+  const current = await list()
+  const streams = names.filter(name => current.includes(name))
   if (streams.length === 0) return Promise.resolve(0)
   return _request({
     method: 'UNSUBSCRIBE',
@@ -152,13 +131,34 @@ export async function unsubscribe (...names) {
   })
 }
 
+function addHandler (stream, handler) {
+  const id = new Date().getTime() + '_' + Math.random()
+  if (!handlersbystream[stream]) {
+    handlersbystream[stream] = [{ id, handler }]
+    console.log('Installed first handler for stream', stream)
+  } else handlersbystream[stream].push({ id, handler })
+  return id
+}
+
+function rmHandler (id) {
+  for (const [stream, handlers] of Object.entries(handlersbystream)) {
+    const index = handlers.findIndex(e => e.id === id)
+    if (index >= 0) {
+      if (handlers.length === 1) delete handlersbystream[stream]
+      else handlers.splice(index, 1)
+      return stream
+    }
+  }
+  return false
+}
+
 export async function listen (handler, ...streams) {
-  const ids = streams.flat(Infinity).map(s => install(s, handler))
+  const ids = streams.flat(Infinity).map(s => addHandler(s, handler))
   await subscribe(...streams)
   return ids
 }
 
 export function dismiss (...ids) {
-  const streams = ids.flat(Infinity).map(id => uninstall(id)).filter(s => s)
+  const streams = ids.flat(Infinity).map(id => rmHandler(id)).filter(s => s)
   return unsubscribe(...streams)
 }

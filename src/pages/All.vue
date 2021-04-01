@@ -209,12 +209,12 @@ const ydigit = (v) => {
 const plus = v => numeral(v).format('+0')
 
 const columns = [
-  { name: 'time', label: 'Time', field: 'time', sortable: true, classes: 'time' },
-  { name: 'symbol', required: true, label: 'Coin', align: 'right', field: 'symbol', sortable: true, classes: 'symbol' },
-  { name: 'frequency', required: true, label: 'Freq.', align: 'right', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
-  { name: 'price', required: true, label: 'Price', align: 'right', field: 'price', sortable: true, classes: 'price' },
+  { name: 'time', label: 'Time', align: 'right', field: 'time', sortable: true, classes: 'time' },
+  { name: 'symbol', required: true, label: 'Coin', align: 'center', field: 'symbol', sortable: true, classes: 'symbol' },
+  { name: 'frequency', required: true, label: 'Freq.', align: 'center', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
+  { name: 'price', required: true, label: 'Price', align: 'left', field: 'price', sortable: true, classes: 'price' },
   { name: 'ptrend', label: '[⇅(P)]', align: 'center', field: row => row.pTrend.direction, sortable: true, format: plus },
-  { name: 'pmag', label: '[P‰]', field: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+  { name: 'pmag', label: '[P‰]', align: 'left', ield: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
   // { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
   // { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
   { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
@@ -398,12 +398,12 @@ export default {
         const j = maverages[i]
         const t = totime(j)
         const cols = [
-          { name: `vema${j}`, label: `${p}/${t}`, align: 'right', field: row => row.vemas[i], format: v => xdigit(v) },
+          { name: `vema${j}`, label: `${p}/${t}`, field: row => row.vemas[i], format: v => xdigit(v) },
           { name: `vtrend${j}`, label: `[⇅(${p}/${t})]`, align: 'center', field: row => row.vemaTrends[i].direction, format: plus },
           { name: `vtrmag${j}`, label: `[(${p}/${t})‰]`, field: row => row.vemaTrends[i].magnitude, format: v => ydigit(1000 * v), classes: 'permil' },
           { name: `vtdura${j}`, label: `[Δt(${p}/${t})]`, field: row => row.vemaTrends[i].duration, format: s => dhms(s / 1000) },
           { name: `vtrate${j}`, label: `[(${p}/${t})‰/s]`, field: row => row.vemaTrends[i].rate, format: v => ydigit(1000 * v), classes: 'permil' },
-          { name: `ema${j}`, label: `EMA(${t})`, align: 'right', field: row => row.emas[i], format: v => xdigit(v) },
+          { name: `ema${j}`, label: `EMA(${t})`, field: row => row.emas[i], format: v => xdigit(v) },
           { name: `etrend${j}`, label: `[⇅(${t})]`, align: 'center', field: row => row.emaTrends[i].direction, format: plus },
           { name: `etrmag${j}`, label: `[${t}‰]`, field: row => row.emaTrends[i].magnitude, format: v => ydigit(1000 * v), classes: 'permil' },
           { name: `etdura${j}`, label: `[Δt(${t})]`, field: row => row.emaTrends[i].duration, format: s => dhms(s / 1000) },
@@ -442,25 +442,26 @@ export default {
     }
   }
   .price {
-    max-width:6em;
-    min-width:6em;
+    max-width:50px;
+    min-width:50px;
   }
   .symbol {
-    max-width:4em;
-    min-width:4em;
+    max-width:60px;
+    min-width:60px;
   }
   .time {
-    max-width:4em;
-    min-width:4em;
+    max-width:1px;
+    min-width:1pz;
   }
   .permil {
-    max-width:3em;
-    min-width:3em;
+    max-width:2em;
+    min-width:2em;
+    text-align: left;
   }
   .tforce1.tforce2.tforce3 {
     td, th {
       font-size: 11px;
-      padding: 4px;
+      padding: 2px;
     }
     .top {
       font-size: 11px;

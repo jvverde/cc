@@ -57,7 +57,7 @@ import { mapState, mapMutations } from 'vuex'
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import data from 'src/charts/data'
-import { subcribeEnqueueCandles } from 'src/helpers/Candle'
+import { CandleOfTrades } from 'src/helpers/Candle'
 import colorname from 'src/components/ColorName'
 
 const settings = { auto_scroll: true }
@@ -200,16 +200,19 @@ export default {
     this.onresize()
     window.addEventListener('resize', this.onresize)
     const maverages = this.maverages
-    const { queue, candle } = subcribeEnqueueCandles(this.symbol, { maverages, minago: 240 })
-    this.init([...queue])
-    this.candle = candle
-    this.handlerid = candle.addHandler(c => this.oncandle(c))
+    // const { queue, candle } = subcribeEnqueueCandles(this.symbol, { maverages, minago: 240 })
+    const handler = c => this.oncandle(c)
+    this.candle = new CandleOfTrades(this.symbol, handler, { maverages, minago: 60 })
+    // this.init([...queue])
+    // this.candle = candle
+    // this.handlerid = candle.addHandler(c => this.oncandle(c))
     this.applyEmaColors()
   },
   beforeDestroy () {
     console.log('destroy...')
     window.removeEventListener('resize', this.onresize)
-    this.candle.delHandler(this.handlerid)
+    // this.candle.delHandler(this.handlerid)
+    this.candle.dismiss()
   }
 }
 </script>
