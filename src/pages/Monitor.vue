@@ -195,21 +195,8 @@ const ydigit = (v) => {
 
 const plus = v => numeral(v).format('+0')
 
-const columns = [
-  { name: 'time', label: 'Time', align: 'right', field: 'time', sortable: true, classes: 'time' },
-  { name: 'symbol', required: true, label: 'Coin', align: 'center', field: 'symbol', sortable: true, classes: 'symbol' },
-  { name: 'frequency', required: true, label: 'Freq.', align: 'center', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
-  { name: 'price', required: true, label: 'Price', align: 'left', field: 'price', sortable: true, classes: 'price' },
-  { name: 'ptrend', label: '[⇅(P)]', align: 'center', field: row => row.pTrend.direction, sortable: true, format: plus },
-  { name: 'pmag', label: '[P‰]', align: 'left', ield: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
-  // { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
-  // { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
-  { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
-  { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', sortable: true, format: v => numeral(v).format('0,0') }
-]
-
 export default {
-  name: 'All',
+  name: 'monitor',
   data () {
     return {
       start: Date.now(),
@@ -221,7 +208,7 @@ export default {
       tickers: {},
       events: {},
       columns: [],
-      visibleColumns: columns.map(c => c.name),
+      visibleColumns: [],
       filters: [],
       filterlabel: '',
       filtername: '',
@@ -381,6 +368,20 @@ export default {
     },
     initColumns () {
       const maverages = this.maverages
+      const columns = [
+        { name: 'time', label: 'Time', align: 'right', field: 'time', sortable: true, classes: 'time' },
+        { name: 'symbol', required: true, label: 'Coin', align: 'center', field: 'symbol', sortable: true, classes: 'symbol' },
+        { name: 'frequency', required: true, label: 'Freq.', align: 'center', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
+        { name: 'price', required: true, label: 'Price', align: 'left', field: 'price', sortable: true, classes: 'price' },
+        { name: 'ptrend', label: '[⇅(P)]', align: 'center', field: row => row.pTrend.direction, sortable: true, format: plus },
+        { name: 'pmag', label: '[P‰]', align: 'left', ield: row => row.pTrend.magnitude, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+        // { name: 'prate', label: '[P‰/s]', field: row => row.pTrend.rate, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+        // { name: 'pdura', label: '[P‰s]', field: row => row.pTrend.dura, sortable: true, format: v => ydigit(1000 * v), classes: 'permil' },
+        // Dynamic columns will be insert HERE
+        { name: 'volume', label: 'Volume', align: 'right', field: 'volume', sortable: true, format: v => numeral(v).format('0,0') },
+        { name: 'quantity', label: 'Qnt.', align: 'right', field: 'quantity', sortable: true, format: v => numeral(v).format('0,0') }
+      ]
+
       const dynamicols = []
       const [sortable, align] = [true, 'left']
       let p = 'P'
@@ -408,6 +409,7 @@ export default {
     }
   },
   mounted () {
+    console.log('Mount monitor')
     const maverages = this.maverages
     this.emaTrends = maverages.map(e => ({}))
     this.vemaTrends = maverages.map(e => ({}))
@@ -415,6 +417,10 @@ export default {
     const handler = t => this.onticker(t)
     this.tickersProducer = new Tickers({ maverages, handler, match: /(?<!DOWN|UP)USDT$/ })
     this.initColumns()
+  },
+  beforeDestroy () {
+    console.log('Destroy monitor...')
+    this.tickersProducer.dismiss()
   }
 }
 

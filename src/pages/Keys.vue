@@ -30,9 +30,13 @@ export default {
   methods: {
   },
   async mounted () {
+    console.log('Mount keys')
     const cred = await getCredentials('binance')
     this.key = cred.key
     this.secret = cred.secret
+  },
+  beforeDestroy () {
+    console.log('Destroy keys')
   }
 }
 </script>

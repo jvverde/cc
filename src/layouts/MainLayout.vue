@@ -26,7 +26,7 @@
 
     <q-page-container>
       <transition>
-        <keep-alive :exclude="/charts/" :max="10">
+        <keep-alive :include="['monitor']" :max="10">
           <router-view />
         </keep-alive>
       </transition>

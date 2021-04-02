@@ -10,6 +10,9 @@
 
 <script>
 export default {
-  name: 'PageIndex'
+  name: 'home',
+  beforeDestroy () {
+    console.log('Destroy Home...')
+  }
 }
 </script>

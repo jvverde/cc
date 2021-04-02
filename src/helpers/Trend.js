@@ -62,7 +62,7 @@ export default class Trend {
   }
 
   get rate () {
-    return this._end === this._start ? 0 : 1000 * this.magnitude / this.duration
+    return this._end === this._start ? 0 : this.magnitude / this.duration * 1000 // per second
   }
 
   get duration () { return this._end - this._start }
