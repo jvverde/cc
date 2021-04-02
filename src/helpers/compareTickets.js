@@ -18,11 +18,12 @@ export default function compare (ticket, intervales = []) {
     const direction = ticket.emaTrends[i.pos].direction
     const duration = ticket.emaTrends[i.pos].duration
     let lasttime = (remember[key] || {}).lasttime
+    repeat[key] = repeat[key] || new EMA(20)
+    const average = repeat[key].value
 
     if (direction === 1 && key in remember && remember[key].direction < 0) {
       if (lasttime) {
         const delta = time - remember[key].lasttime
-        repeat[key] = repeat[key] || new EMA(20)
         repeat[key].update(delta)
         const average = repeat[key].value
         if (!(disable[key] > time)) {
@@ -36,7 +37,11 @@ export default function compare (ticket, intervales = []) {
       say(`EMA(${i.name}) of ${s} start raising`)
     } else if (direction === 30) {
       // reset
-      say(`EMA(${i.name}) of ${s} is raising`)
+      say(`EMA(${i.name}) of ${s} is raising for 30 periods`)
+      repeat[key] = new EMA(20)
+      lasttime = undefined
+    } else if (direction > 1 && average && duration > 2 * average) {
+      say(`EMA(${i.name}) of ${s} is raising for more than ${totime(duration / 1000)}`)
       repeat[key] = new EMA(20)
       lasttime = undefined
     }
