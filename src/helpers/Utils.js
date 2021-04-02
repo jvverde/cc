@@ -60,3 +60,18 @@ const generator = idMaker()
 export function getNewId () {
   return generator.next().value
 }
+
+export const dhms = t => {
+  if (t < 60) return `${0 | t}s`
+  const s = 0 | t % 60
+  t = 0 | t / 60
+  if (t < 60) return `${t}m${s}s`
+  const m = 0 | t % 60
+  t = 0 | t / 60
+  if (t < 24) return `${t}h${m}m${s}s`
+  const h = 0 | t % 24
+  t = 0 | t / 24
+  return `${t}d${h}h${m}m${s}s`
+}
+
+export const totime = t => dhms(t).replace(/m0s$/, 'm').replace(/h0m$/, 'h').replace(/d0h$/, 'd')

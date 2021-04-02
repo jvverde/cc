@@ -6,9 +6,8 @@ const routes = [
     children: [
       { path: '', name: 'home', component: () => import('pages/Index.vue') },
       { path: 'monitor', name: 'monitor', component: () => import('pages/Monitor.vue') },
-      { path: 'all', name: 'all', component: () => import('pages/All.vue') },
       { path: 'keys', name: 'keys', component: () => import('pages/Keys.vue') },
-      { path: 'coin/:symbol', props: true, name: 'coin', component: () => import('pages/Coin.vue') }
+      { path: 'charts/:symbol', props: true, name: 'charts', component: () => import('pages/Charts.vue') }
     ]
   },
 

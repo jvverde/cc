@@ -2,7 +2,7 @@ export default class Queue {
   constructor (size = 301) {
     this._head = 0
     this._tail = 0
-    this._buff = new Array(size).map(e => null)
+    this._buff = size => Array.from(new Array(size), x => null)
     this._size = size
   }
 

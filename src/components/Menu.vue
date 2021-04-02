@@ -20,12 +20,12 @@
         <q-item-label caption>Monitoring assets</q-item-label>
       </q-item-section>
     </q-item-->
-    <q-item :clickable="current !== 'all'" @click="$router.push({ name: 'all' })">
+    <q-item :clickable="current !== 'monitor'" @click="$router.push({ name: 'monitor' })">
       <q-item-section avatar>
         <q-icon color="menu" name="view_stream" />
       </q-item-section>
       <q-item-section>
-        <q-item-label>All Trading pair</q-item-label>
+        <q-item-label>All Trading pairs</q-item-label>
         <q-item-label caption>See current stats for all coins</q-item-label>
       </q-item-section>
     </q-item>
