@@ -65,18 +65,6 @@ export default function compare (ticket, intervales = []) {
 
     let { lRideCnt, lRideMag, lRideRate, lRideDuration } = (remember[key] || {})
 
-    const lRide = lRideCnt
-      ? `size: ${Math.abs(lRideCnt)}, magnitude: ${permil(lRideMag)}, rate: ${permil(lRideRate)}/s, duration: ${hms(lRideDuration)}`
-      : 'no last ride'
-    const [n, m, r, d, c] = [i.name, permil(magnitude), permil(rate), hms(duration), direction]
-
-    const israising = src => {
-      say(`EMA(${n}) of ${s} is raising ${m} at rate ${r}/s over ${d} and ${c} periods [${src}]. Last ride: ${lRide}`)
-    }
-    const isfalling = src => {
-      say(`EMA(${n}) of ${s} is falling ${m} at rate ${r}/s over ${d} and ${-c} periods [${src}]. Last ride: ${lRide}`)
-    }
-
     if (direction === 1 && key in remember && remember[key].direction < 0) {
       if (lasttime) { // Don't count the first event
         bounceCounter[key]++
@@ -87,12 +75,12 @@ export default function compare (ticket, intervales = []) {
           say(`EMA(${i.name}) of ${s} is bouncing every ${hmsms(average)}. This is the ${bounceCounter[key]}nth time`)
           disable[key] = time + suspendFactor * average
         }
-        lRideCnt = remember[key].direction
-        lRideMag = remember[key].magnitude
-        lRideRate = remember[key].rate
-        lRideDuration = remember[key].duration
       }
       lasttime = time
+      lRideCnt = remember[key].direction
+      lRideMag = remember[key].magnitude
+      lRideRate = remember[key].rate
+      lRideDuration = remember[key].duration
       deltamag = magnitudeAlert
       deltarate = rateAlert
     } else if (direction === -1 && key in remember && remember[key].direction > 0) {
@@ -102,7 +90,21 @@ export default function compare (ticket, intervales = []) {
       lRideDuration = remember[key].duration
       deltamag = magnitudeAlert
       deltarate = rateAlert
-    } else if (direction === startAlert) {
+    }
+
+    const lRide = lRideCnt
+      ? `size: ${Math.abs(lRideCnt)}, magnitude: ${permil(lRideMag)}, rate: ${permil(lRideRate)}/s, duration: ${hms(lRideDuration)}`
+      : 'no last ride'
+
+    const [n, m, r, d, c] = [i.name, permil(magnitude), permil(rate), hms(duration), direction]
+    const israising = src => {
+      say(`EMA(${n}) of ${s} is raising ${m} at rate ${r}/s over ${d} and ${c} periods [${src}]. Last ride: ${lRide}`)
+    }
+    const isfalling = src => {
+      say(`EMA(${n}) of ${s} is falling ${m} at rate ${r}/s over ${d} and ${-c} periods [${src}]. Last ride: ${lRide}`)
+    }
+
+    if (direction === startAlert) {
       israising('Start Rising')
     } else if (direction === -startAlert) {
       isfalling('Start falling')
@@ -114,7 +116,9 @@ export default function compare (ticket, intervales = []) {
       isfalling('Is falling')
       averageTimeBouncing[key] = initEMA()
       lasttime = undefined
-    } else if (direction > 1 && average && duration > durationFactorAlert * average) {
+    }
+
+    if (direction > 1 && average && duration > durationFactorAlert * average) {
       israising(`Rising for more than ${durationFactorAlert} bouncing average cycle (=${hms(average)})`)
       averageTimeBouncing[key] = initEMA()
       lasttime = undefined
@@ -123,25 +127,27 @@ export default function compare (ticket, intervales = []) {
       averageTimeBouncing[key] = initEMA()
       lasttime = undefined
     }
-    if (magnitude > deltamag) {
+
+    if (direction > 1 && magnitude > deltamag) {
       israising('Great rising in magnitude')
       averageTimeBouncing[key] = initEMA()
       deltamag += magnitudeAlert
-    } else if (magnitude < -deltamag) {
+    } else if (direction < -1 && magnitude < -deltamag) {
       isfalling('Great falling in magnitude')
-      say(`EMA(${i.name}) of ${s} is falling (${permil(magnitude)}) more than ${permil(deltamag)} over ${hms(duration)} and ${direction} periods at rate of ${permil(rate)}/s`)
       averageTimeBouncing[key] = initEMA()
       deltamag -= magnitudeAlert
     }
-    if (rate > deltarate) {
+
+    if (direction > 1 && rate > deltarate) {
       israising('Great rising rate')
       averageTimeBouncing[key] = initEMA()
       deltarate *= 1.05
-    } else if (rate < -deltarate) {
+    } else if (direction < -1 && rate < -deltarate) {
       isfalling('Great falling rate')
       averageTimeBouncing[key] = initEMA()
       deltarate *= 1.05
     }
+
     remember[key] = { direction, lasttime, duration, magnitude, rate, deltamag, deltarate, lRideCnt, lRideMag, lRideRate, lRideDuration }
   }
 }

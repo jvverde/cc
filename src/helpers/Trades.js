@@ -1,5 +1,5 @@
-import { listen, dismiss } from './stream'
-import { loadAggTradesLastMinutes } from './BinanceApi'
+import { listen, dismiss } from 'src/api/stream'
+import { loadAggTradesLastMinutes } from 'src/api/rest/Trades'
 
 import { EMA } from './MovingAverage'
 

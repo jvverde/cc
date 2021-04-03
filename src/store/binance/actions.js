@@ -1,4 +1,4 @@
-import { allTicker24h } from 'src/helpers/BinanceApi'
+import { allTicker24h } from 'src/api/rest/Binance.api'
 
 export function loadPairs ({ commit }) {
   return new Promise((resolve, reject) => {

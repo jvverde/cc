@@ -1,4 +1,4 @@
-import { listen, dismiss } from './stream'
+import { listen, dismiss } from 'src/api/stream'
 import { EMA } from './MovingAverage'
 import { AVERAGES } from 'src/config'
 import { getNewId } from 'src/helpers/Utils'

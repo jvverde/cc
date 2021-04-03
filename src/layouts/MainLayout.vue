@@ -37,7 +37,7 @@
 <script>
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
-import { connect, disconnect, listen, dismiss } from 'src/helpers/stream'
+import { connect, disconnect, listen, dismiss } from 'src/api/stream'
 import { enqueueTickers } from 'src/data'
 
 export default {
