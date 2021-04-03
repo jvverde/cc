@@ -37,8 +37,7 @@
 <script>
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
-import { connect, disconnect, listen, dismiss } from 'src/api/stream'
-import { enqueueTickers } from 'src/data'
+import { connect, disconnect } from 'src/api/stream'
 
 export default {
   name: 'MainLayout',
@@ -64,15 +63,15 @@ export default {
   },
   async mounted () {
     await connect()
-    console.log('connected on mainLauyout')
-    this.streamid = listen((data) => {
-      const wanted = data.filter(t => this.watchSet.has(t.s))
-      enqueueTickers(wanted)
-    }, '!miniTicker@arr')
+    console.log('Connected on mainLayout')
+    // this.streamid = listen((data) => {
+    //   const wanted = data.filter(t => this.watchSet.has(t.s))
+    //   enqueueTickers(wanted)
+    // }, '!miniTicker@arr')
     this.$q.dark.set(this.darkmode)
   },
   beforeDestroy () {
-    dismiss(...this.streamid)
+    // dismiss(...this.streamid)
     this.stop()
   }
 }
