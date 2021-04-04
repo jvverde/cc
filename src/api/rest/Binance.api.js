@@ -27,3 +27,4 @@ export const getWeight = (endpoint, w, params = {}) => get(endpoint, params).fin
 export const exchangeInfo = () => get('exchangeInfo')
 export const allTicker24h = () => getWeight('ticker/24hr', 40)
 export const aggTrades = params => get('aggTrades', params)
+export const klines = params => get('klines', params)
