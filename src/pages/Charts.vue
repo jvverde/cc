@@ -197,17 +197,18 @@ export default {
       this.dc.set('onchart.ExponentialMovingAverages.data', _emas)
       this.dc.set('onchart.Maximum.data', maxmin)
     },
-    changeTF (period) {
-      console.log('period', period)
+    changeTF (interval) {
+      console.log('period', interval)
       if (this.kline) this.kline.dismiss()
       this.dc.set('chart.data', [])
-      this.dc.set('chart.tf', period)
+      this.dc.set('chart.tf', interval)
       this.dc.set('onchart.ExponentialMovingAverages.data', [])
       this.dc.set('onchart.Maximum.data', [])
       this.kline = new Kline(this.symbol, {
-        period,
+        interval,
         handler: k => this.oncandle(k)
       })
+      console.log(this.dc.get('chart.tf'))
     }
   },
   mounted () {

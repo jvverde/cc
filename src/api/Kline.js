@@ -26,6 +26,7 @@ export default class Kline {
   async _init (symbol, minutes, interval) {
     // First load past klines since 'minutes' ago
     await loadKlines(symbol, {
+      interval,
       minutes,
       handler: (k) => this._insertPreviousOnes(k) // process partial results in batch
     })
