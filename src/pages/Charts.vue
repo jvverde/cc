@@ -47,7 +47,7 @@
         </q-card-section>
       </q-card>
     </q-dialog -->
-    <tfselector :periods="['1m', '3m', '5m']" class="tfselector" @selected="changeTF"/>
+    <tfselector class="tfselector" @selected="changeTF"/>
     <colorname :select.sync="changecolors" :names.sync="colors4emas" :min="maverages.length"/>
     <q-resize-observer @resize="onresize" />
   </q-page>

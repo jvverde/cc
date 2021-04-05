@@ -15,6 +15,7 @@
 </template>
 
 <script>
+import { TIMEFRAMES } from 'src/config'
 
 export default {
   name: 'tfselector',
@@ -26,7 +27,7 @@ export default {
   props: {
     periods: {
       type: Array,
-      required: true
+      default: () => TIMEFRAMES
     }
   },
   computed: {
