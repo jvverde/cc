@@ -38,7 +38,6 @@
 import mainmenu from 'components/Menu.vue'
 import { mapState } from 'vuex'
 import { connect, disconnect } from 'src/api/stream'
-import Kline from 'src/api/Kline'
 
 export default {
   name: 'MainLayout',
@@ -65,9 +64,6 @@ export default {
   async mounted () {
     await connect()
     console.log('Connected on mainLayout')
-    this.kline = new Kline('BNBUSDT', {
-      handler: r => console.log(r)
-    })
     // this.streamid = listen((data) => {
     //   const wanted = data.filter(t => this.watchSet.has(t.s))
     //   enqueueTickers(wanted)

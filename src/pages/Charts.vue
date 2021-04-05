@@ -47,6 +47,7 @@
         </q-card-section>
       </q-card>
     </q-dialog -->
+    <tfselector :periods="['1m', '3m', '5m']" class="tfselector" @selected="changeTF"/>
     <colorname :select.sync="changecolors" :names.sync="colors4emas" :min="maverages.length"/>
     <q-resize-observer @resize="onresize" />
   </q-page>
@@ -57,8 +58,10 @@ import { mapState, mapMutations } from 'vuex'
 import { TradingVue, DataCube } from 'trading-vue-js'
 import Maximum from 'src/charts/Maximum'
 import data from 'src/charts/data'
-import { CandleOfTrades } from 'src/helpers/Candle'
+// import { CandleOfTrades } from 'src/helpers/Candle'
 import colorname from 'src/components/ColorName'
+import tfselector from 'src/components/TFselector'
+import Kline from 'src/api/Kline'
 
 const settings = { auto_scroll: true }
 
@@ -77,7 +80,8 @@ export default {
   },
   components: {
     TradingVue,
-    colorname
+    colorname,
+    tfselector
   },
   computed: {
     ...mapState('binance', ['maverages', 'emacolors']),
@@ -114,16 +118,16 @@ export default {
   },
   methods: {
     ...mapMutations('binance', ['setEmacolors']),
-    oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, emas, histogram }) {
+    oncandle ({ o, h, l, c, v, t, T, m, time, max, min, zigzag, emas }) {
       this.dc.merge('chart.data', [[time, o, h, l, c, v]])
-      this.dc.merge('onchart.Average.data', [[time, m]])
+      // this.dc.merge('onchart.Average.data', [[time, m]])
       // this.dc.merge('onchart.MovingAverages.data', [[time, ...mas]])
       this.dc.merge('onchart.ExponentialMovingAverages.data', [[time, ...emas]])
-      this.dc.set('onchart.Maximum.data', [[T, max, min, zigzag]])
+      this.dc.set('onchart.Maximum.data', [[time, max, min, zigzag]])
 
       const [x1, x2] = this.$refs.tradingVue.getRange()
-      if (!this.stop && x2 < T + 100) {
-        const diff = T + 100 - x2
+      if (!this.stop && x2 < time + 100) {
+        const diff = time + 100 - x2
         this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
       }
 
@@ -192,6 +196,18 @@ export default {
       // this.dc.set('onchart.MovingAverages.data', _mas)
       this.dc.set('onchart.ExponentialMovingAverages.data', _emas)
       this.dc.set('onchart.Maximum.data', maxmin)
+    },
+    changeTF (period) {
+      console.log('period', period)
+      if (this.kline) this.kline.dismiss()
+      this.dc.set('chart.data', [])
+      this.dc.set('chart.tf', period)
+      this.dc.set('onchart.ExponentialMovingAverages.data', [])
+      this.dc.set('onchart.Maximum.data', [])
+      this.kline = new Kline(this.symbol, {
+        period,
+        handler: k => this.oncandle(k)
+      })
     }
   },
   mounted () {
@@ -199,10 +215,10 @@ export default {
     this.dc.onrange(e => console.log('onrange', e))
     this.onresize()
     window.addEventListener('resize', this.onresize)
-    const maverages = this.maverages
+    // const maverages = this.maverages
     // const { queue, candle } = subcribeEnqueueCandles(this.symbol, { maverages, minago: 240 })
-    const handler = c => this.oncandle(c)
-    this.candle = new CandleOfTrades(this.symbol, handler, { maverages, minago: 60 })
+    // const handler = c => this.oncandle(c)
+    // this.candle = new CandleOfTrades(this.symbol, handler, { maverages, minago: 60 })
     // this.init([...queue])
     // this.candle = candle
     // this.handlerid = candle.addHandler(c => this.oncandle(c))
@@ -212,10 +228,15 @@ export default {
     console.log('destroy...')
     window.removeEventListener('resize', this.onresize)
     // this.candle.delHandler(this.handlerid)
-    this.candle.dismiss()
+    // this.candle.dismiss()
   }
 }
 </script>
 
 <style scoped lang="scss">
+  .tfselector {
+    position: absolute;
+    top: 1em;
+    right: 10em;
+  }
 </style>
