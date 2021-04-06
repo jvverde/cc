@@ -143,12 +143,12 @@ export default {
       const s = m * 0.99925
 
       this.dc.merge('onchart.CostBuy.settings', {
-        p1: [now - 60e3, b],
+        p1: [now - 36e5, b],
         p2: [now + 1e3, b]
       })
 
       this.dc.merge('onchart.CostSell.settings', {
-        p1: [now - 60e3, s],
+        p1: [now - 36e5, s],
         p2: [now + 1e3, s]
       })
     },
@@ -228,6 +228,7 @@ export default {
   beforeDestroy () {
     console.log('destroy...')
     window.removeEventListener('resize', this.onresize)
+    if (this.kline) this.kline.dismiss()
     // this.candle.delHandler(this.handlerid)
     // this.candle.dismiss()
   }

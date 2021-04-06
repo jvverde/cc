@@ -67,7 +67,6 @@ export default {
   name: 'colorname',
   data () {
     return {
-      types: filtertypes
     }
   },
   props: {
@@ -128,6 +127,7 @@ export default {
       const test = filtertypes[type]
       if (ref !== undefined && test instanceof Function) {
         f.test = filter(test, valueOf, ref)
+        f.symbol = type.match(/equal/i) ? '=' : type.match(/less/i) ? '<' : type.match(/great/i) ? '>' : type.match(/match/i) ? '~' : ''
       } else {
         f.test = () => true
       }

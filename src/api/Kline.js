@@ -9,7 +9,7 @@ export default class Kline {
   constructor (symbol, { handler = () => null, onupdate = () => null, interval = '1m', maverages = AVERAGES, minago, since = -Infinity } = {}) {
     const id = getNewId()
     this.onclose = [{ id, handler }]
-    this.onupdate = [{ id, onupdate }]
+    this.onupdate = [{ id, handler: onupdate }]
     this.emas = maverages.map(v => new EMA(v))
     this.streamid = this._init(symbol, minago, interval)
     this.zigzag = []

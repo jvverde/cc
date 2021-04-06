@@ -3,7 +3,7 @@
     <q-table class="tforce1 tforce2 tforce3"
       dense
       :title="`Coins performance since ${time()} seconds ago`"
-      :data="filteredData"
+      :data="data"
       :columns="columns"
       :visibleColumns="visibleColumns"
       :rows-per-page-options="[20, 10, 5, 30, 40, 50, 80, 0]"
@@ -13,25 +13,6 @@
         <div class="row no-wrap q-gutter-md full-width top items-start">
           <div>Last {{time()}} seconds of coins performance</div>
           <span :class="difftime > 1000 ? 'red' : 'green'">{{ difftime / 1000 }}s</span>
-          <q-space />
-          <div class="q-gutter-xs">
-            <q-btn-dropdown dense outline no-caps label="Filters" icon="filter_list" >
-              <q-list>
-                <q-item clickable v-close-popup
-                  v-for="(col, index) in columns" :key="index"
-                  @click="filter(col)">
-                  <q-item-section>
-                    {{col.label}}
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
-            <q-chip dense size="md" outline color="amber" square
-              clickable @click="editFilter(index)"
-              removable @remove="removeFilter(index)"
-              v-for="(filter, index) in filters" :key="index" :label="filter.label"
-            />
-          </div>
           <q-space />
           <div class="row wrap q-gutter-xs">
             <q-checkbox indeterminate-value v-model="ema" label="EMA" size="xs" color="green"/>
@@ -68,21 +49,38 @@
           />
           <q-btn
             flat round dense
+            icon="settings"
+            @click="settings"
+            class="q-ml-ml"
+          />
+          <q-btn
+            flat round dense
             :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
             @click="props.toggleFullscreen"
-            class="q-ml-md"
+            class="q-ml-xs"
           />
         </div>
       </template>
 
-      <!--template v-slot:header-cell="props">
+      <template v-slot:header-cell="props">
         <q-th :props="props" class="nospace">
-          <div class="column no-wrap items-start">
+          <div class="column no-wrap items-center">
+            <q-btn size="xs" flat rounded icon="filter_list"
+              @click="filter(props.col)"
+              :color="hasFilters(props.col.name) ? 'amber' : ''"
+            />
+            <div v-if="hasFilters(props.col.name)" class="column" @click.stop="">
+              <q-chip size="xs" outline color="amber" square
+                clickable @click="editFilter(filter.index)"
+                removable @remove="removeFilter(filter.index)"
+                v-for="filter in filtersOf(props.col.name)" :key="`fof${filter.index}`">
+                {{ filter.symbol }}{{ filter.ref }}
+              </q-chip>
+            </div>
             <span>{{ props.col.label }}</span>
-            <q-btn size="xs" flat rounded icon="filter_list" @click="filter(props.col)"/>
           </div>
         </q-th>
-      </template-->
+      </template>
 
       <template v-slot:body-cell-symbol="props">
         <q-td :props="props">
@@ -93,42 +91,6 @@
           </q-btn>
         </q-td>
       </template>
-
-      <!--template v-slot:body-cell-price="props">
-        <q-td :props="props">
-          <q-badge :color="getcolor(props.row.pTrend.direction)" :label="props.value" />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-vema0="props">
-        <q-td :props="props">
-          <q-badge :color="getcolor(props.row.vemaTrends[0].direction)" :label="`${props.value}%`" />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-vema1="props">
-        <q-td :props="props">
-          <q-badge :color="getcolor(props.row.vemaTrends[1].direction)" :label="`${props.value}%`" />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-vema2="props">
-        <q-td :props="props">
-          <q-badge :color="getcolor(props.row.vemaTrends[2].direction)" :label="`${props.value}%`" />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-vema3="props">
-        <q-td :props="props">
-          <q-badge :color="getcolor(props.row.vemaTrends[3].direction)" :label="`${props.value}%`" />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-vema4="props">
-        <q-td :props="props">
-          <q-badge :color="getcolor(props.row.emaTrends[4].direction)" :label="`${props.value}%`" />
-        </q-td>
-      </template-->
 
     </q-table>
     <myfilter :model.sync="editfilter" :filters.sync="filters" :name="filtername" :label="filterlabel"
@@ -149,7 +111,7 @@ import Tickers from 'src/helpers/Tickers'
 import Trend from 'src/helpers/Trend'
 import numeral from 'numeral'
 import myfilter from 'src/components/Filters'
-import compare from 'src/helpers/compareTickets'
+import compare, { settings as msettings } from 'src/tools/compare'
 import { totime, dhms } from 'src/helpers/Utils'
 
 const positiveColors = [
@@ -222,16 +184,13 @@ export default {
     time () {
       return () => 0 | (Date.now() - this.start) / 1000
     },
-    data () {
+    values () {
       return Object.values(this.tickers)
     },
-    filteredData () {
-      let data = this.data
-      for (const f of this.filters) {
-        if (f.test instanceof Function) {
-          // console.log(f)
-          data = data.filter(obj => f.test(obj))
-        }
+    data () {
+      let data = this.values
+      for (const f of this.filters.filter(e => e.test instanceof Function)) {
+        data = data.filter(obj => f.test(obj))
       }
       return data
     },
@@ -288,6 +247,12 @@ export default {
     },
     periods () {
       return this.maverages.map(i => ({ i, s: totime(i), val: true }))
+    },
+    filtersOf () {
+      return name => this.filters.map((e, index) => ({ ...e, index })).filter(e => e.name === name)
+    },
+    hasFilters () {
+      return name => this.filtersOf(name).length > 0
     }
   },
   components: {
@@ -361,7 +326,7 @@ export default {
       const time = new Date(t.time).toLocaleTimeString()
       const nt = { ...t, pTrend, time, vemas, emaTrends, vemaTrends, frequency }
       this.$set(this.tickers, s, nt)
-      compare(nt, this.intervales)
+      if (this === -1111111111111111) compare(nt, this.intervales)
     },
     getcolor (n) {
       return getColor(n)
@@ -406,6 +371,10 @@ export default {
       columns.splice(-2, 0, ...dynamicols)
       this.columns = columns
       this.visibleColumns = columns.map(c => c.name)
+    },
+
+    settings () {
+      msettings()
     }
   },
   mounted () {

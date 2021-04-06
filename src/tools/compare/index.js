@@ -1,6 +1,9 @@
-import { EMA } from './MovingAverage'
+import { EMA } from 'src/helpers/MovingAverage'
 import { totime } from 'src/helpers/Utils'
 import numeral from 'numeral'
+
+import { Dialog } from 'quasar'
+import Settings from './Settings'
 
 const zeros = n => {
   if (n > 0 && Math.abs(n) !== Infinity) {
@@ -24,18 +27,40 @@ const bounceCounter = {}
 // const start = Date.now()
 
 const disable = {}
-let options = {
-  startAlert: 3,
-  risingAlert: 30,
-  durationFactorAlert: 2,
-  emaSize: 20,
-  suspendFactor: 0,
-  magnitudeAlert: 5e-3,
-  rateAlert: 1e-4
+const parameters = [
+  { name: 'startAlert', value: 3, label: 'Initial alert after rising/falling values', min: 1, max: 30, step: 1 },
+  { name: 'risingAlert', value: 30, label: 'Assumed a rising/falling trend after', min: 10, max: 300, step: 1 },
+  { name: 'durationFactorAlert', value: 2, label: 'Exponencial Moving Average Size', min: 2, max: 50, step: 1 },
+  { name: 'emaSize', value: 20, label: 'Exponencial Moving Average Size', min: 5, max: 500, step: 5 },
+  { name: 'suspendFactor', value: 0, label: 'Exponencial Moving Average Size', min: 0, max: 100, step: 1 },
+  { name: 'magnitudeAlert', value: 5e-3, label: 'Exponencial Moving Average Size', min: 1e-4, max: 1e-1, step: 1e-5 },
+  { name: 'rateAlert', value: 1e-4, label: 'Exponencial Moving Average Size', min: 1e-5, max: 1e-1, step: 1e-6 }
+]
+
+const array2obj = (x, obj = {}) => {
+  return x.reduce((obj, e) => {
+    obj[e.name] = e.value
+    return obj
+  }, obj)
 }
 
-export function init (o = {}) {
-  options = { ...options, ...o }
+const options = array2obj(parameters)
+
+console.log('Options', options)
+
+export function settings () {
+  Dialog.create({
+    // See https://quasar.dev/quasar-plugins/dialog#invoking-custom-component
+    component: Settings,
+    question: 'Tunning compare parameters',
+    parameters
+  }).onOk((values) => {
+    console.log('OK', values)
+  }).onCancel(() => {
+    console.log('Cancel')
+  }).onDismiss(() => {
+    console.log('Called on OK or Cancel')
+  })
 }
 
 const initEMA = () => new EMA(options.emaSize)
