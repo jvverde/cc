@@ -28,13 +28,13 @@ const bounceCounter = {}
 
 const disable = {}
 const parameters = [
-  { name: 'startAlert', value: 3, label: 'Initial alert after rising/falling values', min: 1, max: 30, step: 1 },
-  { name: 'risingAlert', value: 30, label: 'Assumed a rising/falling trend after', min: 10, max: 300, step: 1 },
-  { name: 'durationFactorAlert', value: 2, label: 'Exponencial Moving Average Size', min: 2, max: 50, step: 1 },
-  { name: 'emaSize', value: 20, label: 'Exponencial Moving Average Size', min: 5, max: 500, step: 5 },
-  { name: 'suspendFactor', value: 0, label: 'Exponencial Moving Average Size', min: 0, max: 100, step: 1 },
-  { name: 'magnitudeAlert', value: 5e-3, label: 'Exponencial Moving Average Size', min: 1e-4, max: 1e-1, step: 1e-5 },
-  { name: 'rateAlert', value: 1e-4, label: 'Exponencial Moving Average Size', min: 1e-5, max: 1e-1, step: 1e-6 }
+  { name: 'startAlert', value: 3, label: 'Initial alert after rising/falling values', min: 1, max: 100, step: 1 },
+  { name: 'risingAlert', value: 30, label: 'Assumed a change trend after', min: 10, max: 1000, step: 1 },
+  { name: 'durationFactorAlert', value: 2, label: 'Alert if rising/failling for more than N bouncing periods', min: 2, max: 1000, step: 1 },
+  { name: 'emaSize', value: 20, label: 'Exponencial Moving Average Size', min: 5, max: 1000, step: 5 },
+  { name: 'suspendFactor', value: 0, label: 'Suspend bouncing alerts for N periods', min: 0, max: 100, step: 1 },
+  { name: 'magnitudeAlert', value: 5e-3, label: 'Change magnitude (realtive) alert', min: 1e-4, max: 1e-1, step: 1e-5 },
+  { name: 'rateAlert', value: 1e-4, label: 'Rate of change (realtive) per sencond alert', min: 1e-5, max: 1e-1, step: 1e-6 }
 ]
 
 const array2obj = (x, obj = {}) => {
@@ -46,16 +46,17 @@ const array2obj = (x, obj = {}) => {
 
 const options = array2obj(parameters)
 
-console.log('Options', options)
+let currentParams = parameters.map(e => ({ ...e })) // copy every object of array
 
 export function settings () {
   Dialog.create({
     // See https://quasar.dev/quasar-plugins/dialog#invoking-custom-component
     component: Settings,
     question: 'Tunning compare parameters',
-    parameters
-  }).onOk((values) => {
-    console.log('OK', values)
+    parameters: currentParams
+  }).onOk(params => {
+    array2obj(params, options)
+    currentParams = params
   }).onCancel(() => {
     console.log('Cancel')
   }).onDismiss(() => {

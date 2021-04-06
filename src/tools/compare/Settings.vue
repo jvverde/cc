@@ -8,40 +8,28 @@
       </q-card-section>
       <q-card-section>
         <table>
-          <tr v-for="(p, i) in parameters" :key="i">
-            <td style="min-width:10vw; text-align: right" class="q-pr-lg q-pt-lg">
-              {{ p.name }}
-            </td>
-            <td style="min-width:10vw;">
-              aqui: <q-input outlined square v-model.number="parameters[i].value" type="number"/>,,
-            </td>
-            <td style="min-width:30vw" class="q-pt-lg">
-              <q-slider
-                v-model="parameters[i].value"
-                :min="parameters[i].min"
-                :max="parameters[i].max"
-                :step="parameters[i].step"
-                label
-                snap
-                color="teal-13"
-                label-text-color="teal-10"
-                label-color="teal-1"
-                label-always
-              />
-            </td>
-          </tr>
+          <islider v-for="(p, i) in options" :key="i"
+            :val.sync="p.value" :name="p.name" :label="p.label"
+            :min="p.min" :max="p.max" :step="p.step"/>
         </table>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn outline color="green" label="OK" @click="onOKClick" />
-        <q-btn outline color="orange" label="Cancel" @click="onCancelClick" />
+        <q-btn outline color="amber" label="Cancel" @click="onCancelClick" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script>
+import islider from './Islider'
 export default {
+  data () {
+    return {
+      val: 0,
+      options: []
+    }
+  },
   props: {
     question: {
       type: String,
@@ -52,11 +40,22 @@ export default {
       required: true
     }
   },
+  components: {
+    islider
+  },
   computed: {
     currentValue () { return i => this.parameters[i].value },
     label () { return i => this.parameters[i].label },
     max () { return i => this.parameters[i].max },
     min () { return i => this.parameters[i].min }
+  },
+  watch: {
+    options: {
+      deep: true,
+      handler (v, vv) {
+        // console.log('v, vv', v, vv)
+      }
+    }
   },
   methods: {
     // See https://quasar.dev/quasar-plugins/dialog#invoking-custom-component
@@ -82,8 +81,7 @@ export default {
       // on OK, it is REQUIRED to
       // emit "ok" event (with optional payload)
       // before hiding the QDialog
-      const params = this.parameters
-      this.$emit('ok', { params })
+      this.$emit('ok', this.options)
       // then hiding dialog
       this.hide()
     },
@@ -92,6 +90,9 @@ export default {
       // we just need to hide dialog
       this.hide()
     }
+  },
+  mounted () {
+    this.options = this.parameters.map(e => ({ ...e })) // copy every object of array
   }
 }
 </script>
