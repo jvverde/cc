@@ -57,6 +57,7 @@ export function settings () {
   }).onOk(params => {
     array2obj(params, options)
     currentParams = params
+    console.log('options', options)
   }).onCancel(() => {
     console.log('Cancel')
   }).onDismiss(() => {
@@ -155,13 +156,13 @@ export default function compare (ticket, intervales = []) {
     }
 
     if (direction > 1 && magnitude > deltamag) {
-      israising('Great rising in magnitude')
+      israising(`Great rising in magnitude ${magnitude} > ${deltamag}`)
       averageTimeBouncing[key] = initEMA()
       deltamag += magnitudeAlert
     } else if (direction < -1 && magnitude < -deltamag) {
-      isfalling('Great falling in magnitude')
+      isfalling(`Great falling in magnitude  ${magnitude} < -${deltamag}`)
       averageTimeBouncing[key] = initEMA()
-      deltamag -= magnitudeAlert
+      deltamag += magnitudeAlert
     }
 
     if (direction > 1 && rate > deltarate) {
