@@ -17,16 +17,23 @@
           v-model="filter.ref" @input="change(filter, 'match')"/>
       </q-card-section>
       <q-card-section v-else class="scroll" style="max-height: 70vh">
-        <div v-for="(filter, index) in current" :key="index + 'filter'" class="row no-wrap items-center q-gutter-md">
-          <div style="min-width:8em">{{ filter.label }}</div>
-          <q-select borderless stack-label
-            style="min-width:12em"
+        <div v-for="(filter, index) in current" :key="index + 'filter'" class="row no-wrap items-center">
+          <em>{{ filter.label }}</em>
+          <div class="q-mx-lg">is</div>
+          <q-btn-toggle
             v-model="filter.type"
-            label="Comparison" dense options-dense
-            :options="filternames"
+            dense
+            color="teal-3"
+            text-color="white"
+            toggle-color="green-1"
+            toggle-text-color="black"
+            size="md"
+            padding="xs lg"
+            :options="op"
             @input="change(filter)"
+            class="q-mr-lg"
           />
-          <q-input flat borderless label="Reference value"
+          <q-input outlined label="Value" focus color="green-2"
             v-model="filter.ref" @input="change(filter)"/>
           <q-btn icon="clear" color="red" flat size="xs" round @click="remove(filter)" />
         </div>
@@ -50,12 +57,19 @@ const filtertypes = {
   equal: (v, ref) => +v === +ref,
   match: (v, re) => {
     try {
-      return v.match(new RegExp(re))
+      return String(v).match(new RegExp(re))
     } catch (e) {
       console.warn(e)
       return true
     }
   }
+}
+
+const mapTypes2Label = {
+  great: { label: '>', value: 'great' },
+  equal: { label: '=', value: 'equal' },
+  less: { label: '<', value: 'less' },
+  match: { label: '=~', value: 'match' }
 }
 
 // a filter is created from a test function, a valueOf function and one or more reference values
@@ -65,6 +79,7 @@ export default {
   name: 'colorname',
   data () {
     return {
+      op: Object.values(mapTypes2Label)
     }
   },
   props: {
@@ -136,7 +151,7 @@ export default {
       const test = filtertypes[type]
       if (ref !== undefined && test instanceof Function) {
         f.test = filter(test, valueOf, ref)
-        f.symbol = type.match(/equal/i) ? '=' : type.match(/less/i) ? '<' : type.match(/great/i) ? '>' : type.match(/match/i) ? '⊂' : ''
+        f.symbol = mapTypes2Label[type].label
       } else {
         f.test = () => true
       }
