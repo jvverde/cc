@@ -39,3 +39,7 @@ export function unqueue (state, symbol) {
 export function setEmacolors (state, colors) {
   state.emacolors = colors
 }
+
+export function setMaverages (state, maverages) {
+  state.maverages = maverages
+}

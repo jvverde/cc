@@ -204,8 +204,10 @@ export default {
       this.dc.set('chart.tf', interval)
       this.dc.set('onchart.ExponentialMovingAverages.data', [])
       this.dc.set('onchart.Maximum.data', [])
+      const maverages = this.maverages
       this.kline = new Kline(this.symbol, {
         interval,
+        maverages,
         handler: k => this.oncandle(k)
       })
       console.log(this.dc.get('chart.tf'))

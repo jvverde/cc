@@ -38,6 +38,15 @@
         <q-item-label caption>Manage keys</q-item-label>
       </q-item-section>
     </q-item>
+    <q-item :clickable="current !== 'settings'" @click="$router.push({ name: 'settings' })">
+      <q-item-section avatar>
+        <q-icon color="menu" name="settings" />
+      </q-item-section>
+      <q-item-section>
+        <q-item-label>Settings</q-item-label>
+        <q-item-label caption>Edit global settings</q-item-label>
+      </q-item-section>
+    </q-item>
     <q-item clickable @click="debug">
       <q-item-section avatar>
         <q-icon color="menu" name="build" />

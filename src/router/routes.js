@@ -7,6 +7,7 @@ const routes = [
       { path: '', name: 'home', component: () => import('pages/Index.vue') },
       { path: 'monitor', name: 'monitor', component: () => import('pages/Monitor.vue') },
       { path: 'keys', name: 'keys', component: () => import('pages/Keys.vue') },
+      { path: 'settings', name: 'settings', component: () => import('pages/Settings.vue') },
       { path: 'charts/:symbol', props: true, name: 'charts', component: () => import('pages/Charts.vue') }
     ]
   },
