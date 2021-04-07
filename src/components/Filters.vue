@@ -1,18 +1,22 @@
 <template>
-  <q-dialog v-model="selected" :content-style="{ backgroundColor: 'rgb(128, 128, 128, .5)' }">
+  <q-dialog v-model="selected"
+    :content-style="{ backgroundColor: 'rgb(128, 128, 128, .5)' }"
+    @hide="hide"
+    @before-show="beforeShow">
     <q-card class="filter-card">
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Filter</div>
+        <div class="q-mx-xl">Filter by fields which...</div>
         <q-space />
         <q-btn icon="close" flat size="xs" round dense color="purple" v-close-popup />
       </q-card-section>
       <q-separator />
-      <q-card-actions align="right">
-        <span v-if="current.length === 0">You probably want to add a new filter -&gt;</span>
-        <q-btn icon="playlist_add" flat size="sm" round color="green" @click="add" />
-      </q-card-actions>
       <q-separator />
-      <q-card-section class="scroll" style="max-height: 70vh">
+      <q-card-section v-if="isstring" class="scroll column" style="max-height: 70vh">
+        <q-input v-for="(filter, index) in current" :key="index + 'filterMatch'"
+          outlined label="Match" focus color="green-2"
+          v-model="filter.ref" @input="change(filter, 'match')"/>
+      </q-card-section>
+      <q-card-section v-else class="scroll" style="max-height: 70vh">
         <div v-for="(filter, index) in current" :key="index + 'filter'" class="row no-wrap items-center q-gutter-md">
           <div style="min-width:8em">{{ filter.label }}</div>
           <q-select borderless stack-label
@@ -28,6 +32,9 @@
         </div>
       </q-card-section>
       <q-card-actions align="right">
+        <q-btn icon="playlist_add" flat size="sm" round color="green" @click="add" />
+      </q-card-actions>
+      <q-card-actions align="right">
         <q-btn flat label="Accept" color="green-8" v-close-popup />
       </q-card-actions>
     </q-card>
@@ -37,19 +44,10 @@
 <script>
 import { getNewId } from 'src/helpers/Utils'
 
-const val = v => {
-  return isNaN(v) ? v : +v
-}
 const filtertypes = {
-  great: (v, ref) => val(v) > val(ref),
-  less: (v, ref) => val(v) < val(ref),
-  equal: (v, ref) => val(v) === val(ref),
-  StringGreat: (v, ref) => v > ref,
-  StringLess: (v, ref) => v < ref,
-  StringEqual: (v, ref) => v === ref,
-  NumericGreat: (v, ref) => +v > +ref,
-  NumericLess: (v, ref) => +v < +ref,
-  NumericEqual: (v, ref) => +v === +ref,
+  great: (v, ref) => +v > +ref,
+  less: (v, ref) => +v < +ref,
+  equal: (v, ref) => +v === +ref,
   match: (v, re) => {
     try {
       return v.match(new RegExp(re))
@@ -89,6 +87,10 @@ export default {
     valueof: {
       type: Function,
       required: true
+    },
+    isstring: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -106,6 +108,11 @@ export default {
   components: {
   },
   methods: {
+    beforeShow () {
+      if (this.current.length === 0) {
+        this.add()
+      }
+    },
     add () {
       const filter = {
         id: getNewId(),
@@ -114,7 +121,8 @@ export default {
         ref: undefined,
         label: this.label,
         name: this.name,
-        valueOf: this.valueof
+        valueOf: this.valueof,
+        isstring: this.isstring
       }
       this.filters.push(filter)
     },
@@ -122,14 +130,23 @@ export default {
       const index = this.filters.findIndex(e => e.id === f.id)
       this.filters.splice(index, 1)
     },
-    change (f) {
+    change (f, operation) {
+      if (operation) f.type = operation
       const { ref, type, valueOf } = f
       const test = filtertypes[type]
       if (ref !== undefined && test instanceof Function) {
         f.test = filter(test, valueOf, ref)
-        f.symbol = type.match(/equal/i) ? '=' : type.match(/less/i) ? '<' : type.match(/great/i) ? '>' : type.match(/match/i) ? '~' : ''
+        f.symbol = type.match(/equal/i) ? '=' : type.match(/less/i) ? '<' : type.match(/great/i) ? '>' : type.match(/match/i) ? '⊂' : ''
       } else {
         f.test = () => true
+      }
+    },
+    hide () {
+      let j = this.filters.length
+      while (j--) {
+        const f = this.filters[j]
+        if (f.test instanceof Function && f.ref !== undefined) continue
+        this.filters.splice(j, 1)
       }
     }
   },

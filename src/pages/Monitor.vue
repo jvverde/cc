@@ -66,7 +66,7 @@
         <q-th :props="props" class="nospace">
           <div class="column no-wrap items-center">
             <q-btn size="xs" flat rounded icon="filter_list"
-              @click="filter(props.col)"
+              @click="filterColumn(props.col)"
               :color="hasFilters(props.col.name) ? 'amber' : ''"
             />
             <div v-if="hasFilters(props.col.name)" class="column" @click.stop="">
@@ -93,8 +93,7 @@
       </template>
 
     </q-table>
-    <myfilter :model.sync="editfilter" :filters.sync="filters" :name="filtername" :label="filterlabel"
-      :valueof="filtervalueof"/>
+    <myfilter v-bind.sync="filterBindTo"/>
   </q-page>
 </template>
 
@@ -171,12 +170,15 @@ export default {
       events: {},
       columns: [],
       visibleColumns: [],
-      filters: [],
-      filterlabel: '',
-      filtername: '',
-      filtervalueof: () => true,
-      editfilter: false,
-      intervales: []
+      currentFilters: [],
+      intervales: [],
+      filterBindTo: {
+        model: false,
+        filters: [],
+        name: '',
+        label: '',
+        valueof: () => false
+      }
     }
   },
   computed: {
@@ -189,7 +191,7 @@ export default {
     },
     data () {
       let data = this.values
-      for (const f of this.filters.filter(e => e.test instanceof Function)) {
+      for (const f of this.currentFilters.filter(e => e.test instanceof Function)) {
         data = data.filter(obj => f.test(obj))
       }
       return data
@@ -249,7 +251,7 @@ export default {
       return this.maverages.map(i => ({ i, s: totime(i), val: true }))
     },
     filtersOf () {
-      return name => this.filters.map((e, index) => ({ ...e, index })).filter(e => e.name === name)
+      return name => this.currentFilters.map((e, index) => ({ ...e, index })).filter(e => e.name === name)
     },
     hasFilters () {
       return name => this.filtersOf(name).length > 0
@@ -258,38 +260,33 @@ export default {
   components: {
     myfilter
   },
-  watch: {
-    editfilter (v) {
-      if (v === false && this.filterOf && this.filterOf[0] && this.filterOf[0].test instanceof Function) {
-        console.log('editfilter:', this.filterOf, this.filterOf[0].test({ price: 100 }))
-      }
-    }
-  },
   methods: {
     shperiod (v, p) { // Show/Hide period stats
       const re = new RegExp(`[^0-9]${p.i}$`)
       this.setAllVisible(v, re)
     },
-    filter (col) {
-      const { name, label, field } = col
+    openFilter (name, valueof, label = '', isstring = false) {
+      this.filterBindTo = {
+        model: true,
+        filters: this.currentFilters,
+        name,
+        label,
+        valueof,
+        isstring
+      }
+    },
+    filterColumn (col) {
+      const { name, label, field, isstring = false } = col
       // The function valueOf allow us to get the value of field to be tested
       const valueOf = field instanceof Function ? field : obj => obj[field]
-
-      this.filtervalueof = valueOf
-      this.filterlabel = label
-      this.filtername = name
-      this.editfilter = true
-      // console.log(v, typeof v, v instanceof String, v instanceof Function, v instanceof Object)
-    },
-    removeFilter (index) {
-      this.filters.splice(index, 1)
+      this.openFilter(name, valueOf, label, isstring)
     },
     editFilter (index) {
-      const { valueOf, label, name } = this.filters[index]
-      this.filtervalueof = valueOf
-      this.filterlabel = label
-      this.filtername = name
-      this.editfilter = true
+      const { valueOf, label, name, isstring = false } = this.currentFilters[index]
+      this.openFilter(name, valueOf, label, isstring)
+    },
+    removeFilter (index) {
+      this.currentFilters.splice(index, 1)
     },
     setSymbolTrends (s) {
       if (!this.pTrends[s]) {
@@ -326,7 +323,7 @@ export default {
       const time = new Date(t.time).toLocaleTimeString()
       const nt = { ...t, pTrend, time, vemas, emaTrends, vemaTrends, frequency }
       this.$set(this.tickers, s, nt)
-      compare(nt, this.intervales)
+      if (compare === -11111111111111111111) compare(nt, this.intervales)
     },
     getcolor (n) {
       return getColor(n)
@@ -335,7 +332,7 @@ export default {
       const maverages = this.maverages
       const columns = [
         { name: 'time', label: 'Time', align: 'right', field: 'time', sortable: true, classes: 'time' },
-        { name: 'symbol', required: true, label: 'Coin', align: 'center', field: 'symbol', sortable: true, classes: 'symbol' },
+        { name: 'symbol', required: true, label: 'Coin', align: 'center', field: 'symbol', sortable: true, classes: 'symbol', isstring: true },
         { name: 'frequency', required: true, label: 'Freq.', align: 'center', field: 'frequency', sortable: true, format: v => ndigit(v, 2) },
         { name: 'price', required: true, label: 'Price', align: 'left', field: 'price', sortable: true, classes: 'price' },
         { name: 'ptrend', label: '[⇅(P)]', align: 'center', field: row => row.pTrend.direction, sortable: true, format: plus },
