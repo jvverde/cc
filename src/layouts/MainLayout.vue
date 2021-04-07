@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="hHh Lpr fFf">
     <q-header elevated>
       <q-toolbar>
         <q-btn
@@ -24,7 +24,7 @@
       <mainmenu/>
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container class="fit relative column">
       <transition>
         <keep-alive :include="['monitor']" :max="10">
           <router-view />
