@@ -6,6 +6,10 @@ import binance from './binance'
 
 Vue.use(Vuex)
 
+const dataState = createPersistedState({
+  paths: ['binance.maverages', 'binance.emacolors'],
+  key: 'binance.v2'
+})
 /*
  * If not building with SSR mode, you can
  * directly export the Store instantiation;
@@ -24,7 +28,7 @@ export default function (/* { ssrContext } */) {
     // enable strict mode (adds overhead!)
     // for dev mode only
     strict: process.env.DEBUGGING,
-    plugins: [createPersistedState({ key: 'v1' })]
+    plugins: [dataState]
   })
 
   return Store

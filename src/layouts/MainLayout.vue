@@ -24,7 +24,7 @@
       <mainmenu/>
     </q-drawer>
 
-    <q-page-container class="fit relative column">
+    <q-page-container class="relative">
       <transition>
         <keep-alive :include="['monitor']" :max="10">
           <router-view />

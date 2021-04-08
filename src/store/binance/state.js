@@ -4,6 +4,8 @@ export default function () {
     watching: [],
     queueing: [],
     maverages: [3, 30, 300, 3600, 14400],
-    emacolors: ['deepskyblue', 'lime', 'darkorange', 'violet', 'cornsilk']
+    emacolors: ['deepskyblue', 'lime', 'darkorange', 'violet', 'cornsilk'],
+    charts: new Set(),
+    currentchart: undefined
   }
 }

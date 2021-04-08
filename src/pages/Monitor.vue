@@ -84,9 +84,7 @@
 
       <template v-slot:body-cell-symbol="props">
         <q-td :props="props">
-          <q-btn color="green-5" rounded size="sm" flat
-            :to="{ name: 'charts', params: { symbol: props.value } }"
-          >
+          <q-btn color="green-5" rounded size="sm" flat @click="onSelectCoin(props.value)">
             {{ props.value }}
           </q-btn>
         </q-td>
@@ -104,7 +102,7 @@
 
 // console.log('store', store.getters())
 
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 
 import Tickers from 'src/helpers/Tickers'
 import Trend from 'src/helpers/Trend'
@@ -261,6 +259,14 @@ export default {
     myfilter
   },
   methods: {
+    ...mapMutations('binance', ['selectChart']),
+    selectCoin (name) {
+      this.selectChart(name)
+    },
+    onSelectCoin (name) {
+      this.selectCoin(name)
+      this.$router.push({ name: 'charts' })
+    },
     shperiod (v, p) { // Show/Hide period stats
       const re = new RegExp(`[^0-9]${p.i}$`)
       this.setAllVisible(v, re)

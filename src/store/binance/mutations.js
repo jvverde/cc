@@ -43,3 +43,17 @@ export function setEmacolors (state, colors) {
 export function setMaverages (state, maverages) {
   state.maverages = maverages
 }
+
+export function setCurrentChart (state, name) {
+  if (!state.charts.has(name)) throw new Error(`${name} is not in charts list`)
+  state.currentchart = name
+}
+
+export function addChart (state, name) {
+  state.charts.add(name)
+}
+
+export function selectChart (state, name) {
+  state.charts.add(name)
+  state.currentchart = name
+}

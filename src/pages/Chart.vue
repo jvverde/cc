@@ -125,10 +125,12 @@ export default {
       this.dc.merge('onchart.ExponentialMovingAverages.data', [[time, ...emas]])
       this.dc.set('onchart.Maximum.data', [[time, max, min, zigzag]])
 
-      const [x1, x2] = this.$refs.tradingVue.getRange()
-      if (!this.stop && x2 < time + 100) {
-        const diff = time + 100 - x2
-        this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
+      if (this.$refs.tradingVue) {
+        const [x1, x2] = this.$refs.tradingVue.getRange()
+        if (!this.stop && x2 < time + 100) {
+          const diff = time + 100 - x2
+          this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
+        }
       }
 
       const now = Date.now()

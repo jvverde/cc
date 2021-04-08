@@ -15,9 +15,7 @@
             dense
             class="text-teal"
           >
-            <q-tab name="BNBUSDT" label="BNBUSDT" />
-            <q-tab name="BTCUSDT" label="BTCUSDT" />
-            <q-tab name="ETHUSDT" label="ETHUSDT" />
+            <q-tab v-for="(c, i) in charts" :key="`chart_tab_${i}`" :name="c" :label="c"/>
           </q-tabs>
         </div>
       </template>
@@ -32,16 +30,8 @@
             transition-prev="jump-up"
             transition-next="jump-up"
           >
-            <q-tab-panel name="BNBUSDT">
-              <chart symbol="BNBUSDT"/>
-            </q-tab-panel>
-
-            <q-tab-panel name="BTCUSDT">
-              <chart symbol="BTCUSDT"/>
-            </q-tab-panel>
-
-            <q-tab-panel name="ETHUSDT">
-              <chart symbol="ETHUSDT"/>
+            <q-tab-panel v-for="(c, i) in charts" :key="`chart_tab_panel_${i}`" :name="c">
+              <chart :symbol="c"/>
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -53,6 +43,7 @@
 
 <script>
 import chart from './Chart'
+import { mapState } from 'vuex'
 
 export default {
   name: 'charts',
@@ -61,6 +52,9 @@ export default {
       chart: 'BNBUSDT',
       splitter: 6
     }
+  },
+  computed: {
+    ...mapState('binance', ['charts', 'currentchart'])
   },
   components: {
     chart
