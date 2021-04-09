@@ -1,8 +1,8 @@
 <template>
   <q-page class="fit row content-stretch">
-    <div class="full-width q-my-md" ref="coinpage">
+    <div class="full-width q-my-md" :ref="cp_ref">
       <trading-vue
-          ref="tradingVue"
+          :ref="tv_ref"
           :data="dc"
           :width="width"
           :height="height"
@@ -17,36 +17,6 @@
       </trading-vue>
       <q-btn class="q-mt-sm" color="brown" size="xs" label="Start/Stop" icon="pause" rounded @click="startstop"/>
     </div>
-    <!-- q-dialog v-model="changecolors">
-      <q-card>
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Chose colors</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section>
-          <q-list dense>
-            <q-item  v-for="(color, index) in color4emas" :key="index" dense>
-              <q-item-section side>
-                EMA({{ maverages[index] }}):
-              </q-item-section>
-              <q-item-section/>
-              <q-item-section :style="`color: ${color}`" side>
-                {{ color }}
-                <q-popup-edit v-model="color4emas[index]">
-                  <q-input v-model="color4emas[index]" dense>
-                    <template v-slot:append>
-                      <q-icon name="edit" />
-                    </template>
-                  </q-input>
-                </q-popup-edit>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card-section>
-      </q-card>
-    </q-dialog -->
     <tfselector class="tfselector" @selected="changeTF"/>
     <colorname :select.sync="changecolors" :names.sync="colors4emas" :min="maverages.length"/>
     <q-resize-observer @resize="onresize" />
@@ -102,7 +72,11 @@ export default {
           this.applyEmaColors()
         }
       }
-    }
+    },
+    tv_ref () { return `tradingVue_${this.symbol}` },
+    cp_ref () { return `coinpage_${this.symbol}` },
+    tv () { return this.$refs[this.tv_ref] },
+    cp () { return this.$refs[this.cp_ref] }
   },
   props: {
     symbol: {
@@ -124,13 +98,10 @@ export default {
       // this.dc.merge('onchart.MovingAverages.data', [[time, ...mas]])
       this.dc.merge('onchart.ExponentialMovingAverages.data', [[time, ...emas]])
       this.dc.set('onchart.Maximum.data', [[time, max, min, zigzag]])
-
-      if (this.$refs.tradingVue) {
-        const [x1, x2] = this.$refs.tradingVue.getRange()
-        if (!this.stop && x2 < time + 100) {
-          const diff = time + 100 - x2
-          this.$refs.tradingVue.setRange(x1 + diff, x2 + diff)
-        }
+      const [x1, x2] = this.tv.getRange()
+      if (!this.stop && x2 < time + 100) {
+        const diff = time + 100 - x2
+        this.tv.setRange(x1 + diff, x2 + diff)
       }
 
       const now = Date.now()
@@ -156,8 +127,8 @@ export default {
     },
     onresize () {
       try {
-        this.width = this.$refs.coinpage.clientWidth
-        this.height = this.$refs.coinpage.clientHeight - 80
+        this.width = this.cp.clientWidth
+        this.height = this.cp.clientHeight - 36
       } catch (e) {
         console.warn('Rezise', e)
       }
@@ -212,7 +183,6 @@ export default {
         maverages,
         handler: k => this.oncandle(k)
       })
-      console.log(this.dc.get('chart.tf'))
     }
   },
   mounted () {

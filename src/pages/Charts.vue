@@ -12,10 +12,15 @@
           <q-tabs
             v-model="chart"
             vertical
-            dense
+            den-se
             class="text-teal"
           >
-            <q-tab v-for="(c, i) in charts" :key="`chart_tab_${i}`" :name="c" :label="c"/>
+            <q-tab v-for="(c, i) in sCharts" :key="`chart_tab_${i}`" :name="c" :label="c" class="relative-position">
+              <q-btn icon="clear" round size="xs" flat color="purple"
+                @click.stop="remove(c)"
+                class="absolute-top-left" style="top: 0px; left: -30px"
+              />
+            </q-tab>
           </q-tabs>
         </div>
       </template>
@@ -24,13 +29,10 @@
         <div class="columns no-wrap full-height">
           <q-tab-panels
             v-model="chart"
-            animated
             vertical
             keep-alive
-            transition-prev="jump-up"
-            transition-next="jump-up"
           >
-            <q-tab-panel v-for="(c, i) in charts" :key="`chart_tab_panel_${i}`" :name="c">
+            <q-tab-panel v-for="(c, i) in sCharts" :key="`chart_tab_panel_${i}`" :name="c">
               <chart :symbol="c"/>
             </q-tab-panel>
           </q-tab-panels>
@@ -43,21 +45,32 @@
 
 <script>
 import chart from './Chart'
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 
 export default {
   name: 'charts',
   data () {
     return {
       chart: 'BNBUSDT',
-      splitter: 6
+      splitter: 10
     }
   },
   computed: {
-    ...mapState('binance', ['charts', 'currentchart'])
+    ...mapState('binance', ['charts', 'currentchart']),
+    sCharts () { return [...this.charts] }
   },
   components: {
     chart
+  },
+  methods: {
+    ...mapMutations('binance', ['rmChart']),
+    remove (name) {
+      console.log(name)
+      this.rmChart(name)
+    }
+  },
+  mounted () {
+    console.log('mounted charts')
   },
   beforeDestroy () {
     console.log('Destroy charts...')

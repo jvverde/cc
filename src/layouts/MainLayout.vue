@@ -15,7 +15,7 @@
           Cryptocoins Monitoring
         </q-toolbar-title>
 
-        <q-toggle v-model="darkmode" label="DM" @input="chgmode" color="black" class="q-mr-lg"/>
+        <q-toggle v-model="darkmode" icon="dark_mode" @input="chgmode" color="black" class="q-mr-lg"/>
         <q-btn color="orange" icon="stop" round dense size="xs" outline @click="stop()"/>
       </q-toolbar>
     </q-header>

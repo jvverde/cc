@@ -29,6 +29,15 @@
         <q-item-label caption>See current stats for all coins</q-item-label>
       </q-item-section>
     </q-item>
+    <q-item :clickable="current !== 'charts'" @click="$router.push({ name: 'charts' })">
+      <q-item-section avatar>
+        <q-icon color="menu" name="bar_chart" />
+      </q-item-section>
+      <q-item-section>
+        <q-item-label>Charts</q-item-label>
+        <q-item-label caption>Coin progress over time</q-item-label>
+      </q-item-section>
+    </q-item>
     <q-item :clickable="current !== 'keys'" @click="$router.push({ name: 'keys' })">
       <q-item-section avatar>
         <q-icon color="menu" name="password" />

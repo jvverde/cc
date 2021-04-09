@@ -53,6 +53,12 @@ export function addChart (state, name) {
   state.charts.add(name)
 }
 
+export function rmChart (state, name) {
+  state.charts.delete(name)
+  const a = [...state.charts]
+  state.charts = new Set(a)
+}
+
 export function selectChart (state, name) {
   state.charts.add(name)
   state.currentchart = name
