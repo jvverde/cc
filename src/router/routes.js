@@ -8,7 +8,17 @@ const routes = [
       { path: 'monitor', name: 'monitor', component: () => import('pages/Monitor.vue') },
       { path: 'keys', name: 'keys', component: () => import('pages/Keys.vue') },
       { path: 'settings', name: 'settings', component: () => import('pages/Settings.vue') },
-      { path: 'charts', props: true, name: 'charts', component: () => import('pages/Charts.vue') },
+      {
+        path: 'charts',
+        name: 'charts',
+        component: () => import('pages/Charts.vue'),
+        children: [{
+          path: 'show/:symbol',
+          props: true,
+          name: 'showchart',
+          component: () => import('pages/Chart.vue')
+        }]
+      },
       { path: 'chart/:symbol', props: true, name: 'chart', component: () => import('pages/Chart.vue') }
     ]
   },

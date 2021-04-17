@@ -329,7 +329,7 @@ export default {
       const time = new Date(t.time).toLocaleTimeString()
       const nt = { ...t, pTrend, time, vemas, emaTrends, vemaTrends, frequency }
       this.$set(this.tickers, s, nt)
-      compare(nt, this.intervales)
+      if (compare === 3) compare(nt, this.intervales)
     },
     getcolor (n) {
       return getColor(n)
