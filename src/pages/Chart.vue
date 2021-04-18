@@ -45,8 +45,7 @@ export default {
       dc: new DataCube(data(), settings),
       width: 800,
       height: 600,
-      overlays: [Maximum],
-      interval: '1m'
+      overlays: [Maximum]
     }
   },
   components: {
@@ -90,9 +89,6 @@ export default {
     }
   },
   watch: {
-    symbol () {
-      this.init_chart()
-    }
   },
   methods: {
     ...mapMutations('binance', ['setEmacolors']),
@@ -176,18 +172,14 @@ export default {
     },
     changeTF (interval) {
       console.log('period', interval)
-      this.interval = interval
-      this.init_chart()
-    },
-    init_chart () {
       if (this.kline) this.kline.dismiss()
       this.dc.set('chart.data', [])
-      this.dc.set('chart.tf', this.interval)
+      this.dc.set('chart.tf', interval)
       this.dc.set('onchart.ExponentialMovingAverages.data', [])
       this.dc.set('onchart.Maximum.data', [])
       const maverages = this.maverages
       this.kline = new Kline(this.symbol, {
-        interval: this.interval,
+        interval,
         maverages,
         handler: k => this.oncandle(k)
       })
@@ -209,10 +201,11 @@ export default {
   },
   beforeDestroy () {
     console.log('destroy...')
-    window.removeEventListener('resize', this.onresize)
+    this.oncandle = () => false
     if (this.kline) this.kline.dismiss()
     // this.candle.delHandler(this.handlerid)
     // this.candle.dismiss()
+    window.removeEventListener('resize', this.onresize)
   }
 }
 </script>

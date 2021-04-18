@@ -2,35 +2,38 @@
   <q-page padding class="fit relative columns">
     <div class="row">
       <q-tabs
-        v-model="chart"
+        v-model="current"
+        dense
         class="text-teal">
-        <q-route-tab v-for="(c, i) in sCharts" :key="`chart_tab_${i}`"
+        <q-tab v-for="(c, i) in sCharts" :key="`chart_tab_${i}`"
           :name="c"
           :label="c"
-          :to="{ name: 'showchart', params: { symbol: c } }"
           class="relative-position">
           <q-btn icon="clear" round size="xs" flat color="purple"
             @click.stop="remove(c)"
             class="absolute-top-left" style="top: 0px; left: -30px"
           />
-        </q-route-tab>
+        </q-tab>
       </q-tabs>
     </div>
     <div>
-      <router-view></router-view>
+      <div v-for="c in sCharts" :key="`chart_body_${c}`">
+        <chart :symbol="c"/>
+      </div>
     </div>
+    <router-view></router-view>
   </q-page>
 </template>
 
 <script>
+import chart from './Chart'
 import { mapState, mapMutations } from 'vuex'
 
 export default {
   name: 'charts',
   data () {
     return {
-      chart: 'BNBUSDT',
-      splitter: 10
+      current: ''
     }
   },
   computed: {
@@ -38,6 +41,7 @@ export default {
     sCharts () { return [...this.charts] }
   },
   components: {
+    chart
   },
   methods: {
     ...mapMutations('binance', ['rmChart']),
