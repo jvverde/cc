@@ -26,10 +26,10 @@ export default function (/* { store, ssrContext } */) {
     base: process.env.VUE_ROUTER_BASE
   })
 
-  Router.beforeEach((to, from, next) => {
-    console.log('Global', from, to)
-    next()
-  })
+  // Router.beforeEach((to, from, next) => {
+  //   console.log('Global', from, to)
+  //   next()
+  // })
 
   return Router
 }
